@@ -1,0 +1,2 @@
+class DuplicateFileException(Exception):
+    pass

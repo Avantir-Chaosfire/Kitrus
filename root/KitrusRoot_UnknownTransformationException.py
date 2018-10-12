@@ -1,0 +1,2 @@
+class UnknownTransformationException(Exception):
+    pass
