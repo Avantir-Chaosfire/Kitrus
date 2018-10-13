@@ -1,5 +1,5 @@
 #!/bin/sh
 
-cd "$KitrusInstallDirectory"/root || exit 1
+cd "$KitrusInstallDirectory"/root
 
 python3 KitrusRoot_Main.py "$KitrusProjectDirectory"
