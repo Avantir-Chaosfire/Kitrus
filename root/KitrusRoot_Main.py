@@ -1,3 +1,5 @@
+#!python3
+
 import sys, os, imp
 
 from KitrusRoot_Transformation import *
