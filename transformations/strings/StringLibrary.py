@@ -17,7 +17,10 @@ class StringLibrary:
         self.parsedStringSetNames = []
         self.stringFilesToParse = []
 
-        directories = [os.path.join('strings', '')]
+        stringDirectoryName = os.path.join('strings', '')
+        self.stringsDirectoryNameLength = len(stringDirectoryName)
+
+        directories = [stringDirectoryName]
         expandingDirectories = directories
         while True:
             subdirectories = []
@@ -41,7 +44,7 @@ class StringLibrary:
         with codecs.open(fileName, encoding = 'utf-8') as stringsFile:
             lines = stringsFile.readlines()
 
-        setName = fileName[8:-4]
+        setName = fileName[self.stringsDirectoryNameLength:-4].replace('\\', '/')
 
         self.stringSets[setName] = StringSet(setName)
 
@@ -61,7 +64,7 @@ class StringLibrary:
 
                     if dependency not in self.parsedStringSetNames:
                         if dependency not in self.stringSets.keys():
-                            self.parseStringFile(os.path.join('strings', dependency + '.str'))
+                            self.parseStringFile(os.path.join('strings', *(dependency.split('/'))) + '.str')
                         else:
                             raise StringParsingException(setName, lineNumber, 'Cyclic dependency found; Cannot be resolved.')
 

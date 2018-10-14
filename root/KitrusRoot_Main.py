@@ -38,8 +38,8 @@ def parseModuleLine(line, lineNumber, configuration):
 
 def getModules():
     lines = []
-    with open(os.path.join('Kitrusfile'), 'r') as modulesFile:
-        lines = modulesFile.readlines()
+    with open(os.path.join('Kitrusfile'), 'r') as kitrusFile:
+        lines = kitrusFile.readlines()
 
     mode = ''
     lineNumber = 1
