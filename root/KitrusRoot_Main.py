@@ -122,7 +122,8 @@ def main(projectDirectory):
             sys.stdout.flush()
             module.transform(transformations[transformationName])
             writeOutput(transformations[transformationName])
-                    
+
+        sys.stdout.write('\tWriting...\n')
         sys.stdout.flush()
         module.export()
 
