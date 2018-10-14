@@ -116,7 +116,7 @@ class StringLibrary:
             self.stringSets[setName].strings[key] = {}
 
         for kind in self.stringSets[setName].kinds:
-            stringValue = self.replaceStringKeys(value, kind, lambda l, m: self.raiseException(StringParsingException(setName, lineNumber, m)))
+            stringValue = self.replaceStringKeys(value, kind, lambda l, m: self.raiseException(StringParsingException(setName, lineNumber, m)), setName)
                 
             if kind in self.stringSets[setName].strings[key].keys():
                 if kind in self.stringSets[setName].joins.keys():
@@ -135,7 +135,9 @@ class StringLibrary:
 
         return keys
 
-    def stringKeysOf(self, stringSet):
+    def stringKeysOf(self, stringSetName):
+        stringSet = self.stringSets[stringSetName]
+        
         keys = []
         keys += stringSet.strings.keys()
 
@@ -231,11 +233,17 @@ class StringLibrary:
 
         return string
 
-    def replaceStringKeys(self, contents, kind, errorFunction):
+    def replaceStringKeys(self, contents, kind, errorFunction, stringSetName = None):
         contents = self.replacePredefinedKeys(contents)
 
         if self.containsParameter(contents):
             return contents
+
+        stringKeys = []
+        if stringSetName == None:
+            stringKeys = self.stringKeys()
+        else:
+            stringKeys = self.stringKeysOf(stringSetName)
         
         endIndex = len(contents)
 
@@ -256,14 +264,14 @@ class StringLibrary:
 
             if not key.startswith('\\'): #Key is not escaped
                 if len(arguments) == 1:
-                    if key in self.stringKeys():
+                    if key in stringKeys:
                         value = self.getValue(key, kind)
                         contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                     else:
                         errorFunction(lineNumber, 'Unknown string key "' + key + '"')
                 elif len(arguments) > 1:
-                    if arguments[0] in self.stringKeys():
-                        value = self.replaceParameters(arguments, kind, lineNumber, errorFunction)
+                    if arguments[0] in stringKeys:
+                        value = self.replaceParameters(arguments, kind, lineNumber, errorFunction, stringSetName)
                         contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                     else:
                         errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
@@ -280,7 +288,7 @@ class StringLibrary:
             
         return contents
 
-    def replaceParameters(self, arguments, kind, lineNumber, errorFunction):
+    def replaceParameters(self, arguments, kind, lineNumber, errorFunction, stringSetName):
         arguments = unescapeParameterSeparators(arguments)
             
         value = self.getValue(arguments[0], kind)
@@ -298,7 +306,7 @@ class StringLibrary:
 
         value = unescapeSymbols(value, ESCAPED_PARAMETER_PATTERN)
 
-        return self.replaceStringKeys(value, kind, errorFunction)
+        return self.replaceStringKeys(value, kind, errorFunction, stringSetName)
 
     def containsParameter(self, contents):
         return not re.search('#(([1-9]([0-9])*)|0)#', contents) == None
