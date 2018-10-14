@@ -1,6 +1,6 @@
 ## About
 
-Kitrus is a tool for storing sets of files in one location and utilising transformed copies of them in another. It was originally developed to facilitate Minecraft: Java Edition data pack development, but can be used for anything at all.
+Kitrus is a community extendable tool for storing sets of files in one location and utilising transformed copies of them in another. It was originally developed to facilitate Minecraft: Java Edition data pack development, but can be used for anything at all.
 
 I built the first version of Kitrus slowly over the course of 9 months, only adding features as I needed them. The result is a program that is not only highly practical but has proven its usefulness and is easily extendible for future functionality.
 
@@ -8,7 +8,7 @@ As of 9 months in development, Kitrus has saved my project 858 files and 2950 li
 
 ## Features
 
-Running Kitrus will copy files from a set of predefined locations to a set of predefined destinations. In the process, it will apply transformations to those files and report the results of those transformations. At present, Kitrus has a mere two transformations:
+Running Kitrus will copy files from a set of predefined locations to a set of predefined destinations. In the process, it will apply transformations to those files and report the results of those transformations. Transformations can be made by anyone. At present, Kitrus has a mere two transformations:
 
 ### Strings
 
