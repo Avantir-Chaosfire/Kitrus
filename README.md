@@ -35,29 +35,39 @@ If you already have a project and want to quickly start using it with Kitrus and
 
 #### Windows
 
-TODO
+Open the script named "export.bat" with a basic text editor (e.g. Wordpad). The file will look like this:
+```
+@ECHO OFF
 
-#### Mac
+SET KITRUSINSTALLDIRECTORY=
+SET KITRUSPROJECTDIRECTORY=%~dp0
+CD %KITRUSINSTALLDIRECTORY%
 
-Open the script named "export.sh" with a basic text editor (e.g. TextEdit). The file will look like this:
+root_export "%KITRUSINSTALLDIRECTORY%" "%KITRUSPROJECTDIRECTORY%"
+```
+Write the absolute path of your Kitrus install directory at the end of the line `SET KITRUSINSTALLDIRECTORY=` without a trailing backslash. The result should look something like this:
+```
+SET KITRUSINSTALLDIRECTORY=C:\Users\AvantirChaosfire\Documents\kitrus
+```
+Assuming that `C:\Users\AvantirChaosfire\Documents\kitrus\export.sh` is the file you're editting.
+
+#### Mac/Linux
+
+Open the script named "export.sh" with a basic text editor (e.g. TextEdit or gedit). The file will look like this:
 ```
 #!/bin/sh
 
 export KitrusInstallDirectory=
-export KitrusProjectDirectory="`dirname \"$0\"`"
+export KitrusProjectDirectory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 cd "$KitrusInstallDirectory"
 
 ./root_export.sh
 ```
 Write the absolute path of your Kitrus install directory at the end of the line `export KitrusInstallDirectory=` without a trailing slash. The result should look something like this:
 ```
-export KitrusInstallDirectory=/Users/Avantir-Chaosfire/Documents/Programs/kitrus
+export KitrusInstallDirectory=/Users/Avantir-Chaosfire/Documents/kitrus
 ```
-Assuming that `/Users/Avantir-Chaosfire/Documents/Programs/kitrus/export.sh` is the file you're editting.
-
-#### Linux
-
-TODO
+Assuming that `/Users/Avantir-Chaosfire/Documents/kitrus/export.sh` is the file you're editting.
 
 7. Copy the script you just editted into your Kitrus project directory.
 8. Create a file in your Kitrus project directory with no extension named `Kitrusfile`. Open it with your basic text editor and paste in the following:
@@ -89,10 +99,6 @@ Oh no, Joe thought as he turned around.
 ```
 You can reference strings in any kind of file, including mcfunction and json files.
 
-## Full Installation and Usage Instructions
-
-TODO
-
 ## Usage in Data Pack Development
 
 Examples of things I've used Kitrus for to make data pack development easier:
@@ -103,6 +109,6 @@ Examples of things I've used Kitrus for to make data pack development easier:
 4. Store item name objects, attribute modifiers, villager tags and common entity tags (Among other things) as strings, so that they can be used in multiple places to dramatically reduce the amount of typing I have to do and the complexity of the commands I read.
 5. Removed nearly duplicate commands in give functions, custom item, enemy, spellcasting, weapon and enemy ai systems by putting them in classes. This is where all those files and commands I saved come from.
 
-## Developing Transformations
+## Full Installation, Usage Instructions and Documentation on Developing Transformations
 
 TODO
