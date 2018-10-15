@@ -82,6 +82,7 @@ Assuming that `/Users/Avantir-Chaosfire/Documents/kitrus/export.sh` is the file 
 9. All done! Your files should look like this now:
 
 ![alt text](images/File%20Hierarchy%20Example.png)
+
 You can now run the export script in your Kitrus project directory to export and transform the contents of your original project folder into the destination. The following steps will explain basic usage of strings.
 10. Create a folder called "strings" inside of your Kitrus project directory.
 11. You can create files to define strings inside of your strings directory that have the extension ".str".
