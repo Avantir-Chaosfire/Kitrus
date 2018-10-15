@@ -78,7 +78,7 @@ Assuming that `/Users/Avantir-Chaosfire/Documents/kitrus/export.sh` is the file 
 ```
 
 8. Replace `<source>` with the name of the folder your original project is contained in inside of your Kitrus project directory, and replace `<destination>` with the full path to the directory you copied into your Kitrus project folder in step 2 (i.e. the directory you want all of your project files to end up in). The directory you enter here **WILL BE DELETED**. So make sure it's the right directory and that there's nothing else in or near there you haven't backed up.
-![alt text](https://raw.githubusercontent.com/Avantir-Chaosfire/Kitrus/master/documentation/images/File\ Hierarchy\ Example.png)
+![alt text](documentation/images/File-Hierarchy-Example.png)
 9. All done! (TODO: Example figure) You can now run the export script in your Kitrus project directory to export and transform the contents of your projects folder into the destination. The following steps will explain basic usage of strings.
 10. Create a folder called "strings" inside of your Kitrus project directory.
 11. You can create files to define strings inside of your strings directory that have the extension ".str".
