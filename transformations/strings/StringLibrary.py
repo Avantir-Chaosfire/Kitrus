@@ -6,6 +6,15 @@ from UnescapeFunctions import *
 
 class StringLibrary:
     def __init__(self):
+        self.STRINGS_DIRECTORY_NAME = 'strings'
+        self.STRING_FILE_EXTENSION = '.str'
+        self.LINE_START_METACHARACTER = '#'
+        self.INCLUDE_STATEMENT_KEYWORD = 'include'
+        self.JOIN_STATEMENT_KEYWORD = 'join'
+        self.PREDEFINED_KEY_METACHARACTER = '#'
+        self.PARAMETER_METACHARACTER = '#'
+        self.STRING_KEY_METACHARACTER = '##'
+        
         self.complete = False
         self.warnings = []
         
@@ -17,10 +26,10 @@ class StringLibrary:
         self.parsedStringSetNames = []
         self.stringFilesToParse = []
 
-        stringDirectoryName = os.path.join('strings', '')
-        self.stringsDirectoryNameLength = len(stringDirectoryName)
+        stringsDirectoryPath = os.path.join(self.STRINGS_DIRECTORY_NAME, '')
+        self.stringsDirectoryNameLength = len(stringsDirectoryPath)
 
-        directories = [stringDirectoryName]
+        directories = [stringsDirectoryPath]
         expandingDirectories = directories
         while True:
             subdirectories = []
@@ -32,7 +41,7 @@ class StringLibrary:
             directories += subdirectories
 
         for directory in directories:
-            self.stringFilesToParse += glob.glob(os.path.join(directory, '*.str'))
+            self.stringFilesToParse += glob.glob(os.path.join(directory, '*' + self.STRING_FILE_EXTENSION))
 
         while len(self.stringFilesToParse) > 0:
             self.parseStringFile(self.stringFilesToParse[0])
@@ -55,16 +64,16 @@ class StringLibrary:
             if not line == '':
                 args = self.getArgs(line)
 
-                if args[0] == '#include':
+                if args[0] == self.LINE_START_METACHARACTER + self.INCLUDE_STATEMENT_KEYWORD:
                     if len(args) != 2:
-                        raise StringParsingException(setName, lineNumber, 'Expected 2 arguments to #include, but found ' + str(len(args)))
+                        raise StringParsingException(setName, lineNumber, 'Expected 2 arguments to ' + self.LINE_START_METACHARACTER + self.INCLUDE_STATEMENT_KEYWORD + ', but found ' + str(len(args)))
                         
                     dependency = args[1]
                     self.stringSets[setName].dependencies.append(dependency)
 
                     if dependency not in self.parsedStringSetNames:
                         if dependency not in self.stringSets.keys():
-                            self.parseStringFile(os.path.join('strings', *(dependency.split('/'))) + '.str')
+                            self.parseStringFile(os.path.join(self.STRINGS_DIRECTORY_NAME, *(dependency.split('/'))) + self.STRING_FILE_EXTENSION)
                         else:
                             raise StringParsingException(setName, lineNumber, 'Cyclic dependency found; Cannot be resolved.')
 
@@ -72,9 +81,9 @@ class StringLibrary:
                         if kind not in self.stringSets[setName].kinds:
                             self.stringSets[setName].kinds.append(kind)
                 
-                elif args[0] == '#join':
+                elif args[0] == self.LINE_START_METACHARACTER + self.JOIN_STATEMENT_KEYWORD:
                     if len(args) != 3:
-                        raise StringParsingException(setName, lineNumber, 'Expected 3 arguments to #join, but found ' + str(len(args)))
+                        raise StringParsingException(setName, lineNumber, 'Expected 3 arguments to ' + self.LINE_START_METACHARACTER + self.JOIN_STATEMENT_KEYWORD + ' but found ' + str(len(args)))
                     
                     kind = args[1]
                     join = self.replacePredefinedKeys(args[2])
@@ -198,11 +207,11 @@ class StringLibrary:
         endIndex = len(contents)
         
         for (key, value) in self.predefinitions.items():
-            hashKey = '#' + key + '#'
+            hashKey = self.PREDEFINED_KEY_METACHARACTER + key + self.PREDEFINED_KEY_METACHARACTER
             while hashKey in contents:
                 contents = contents.replace(hashKey, value(), 1)
 
-        return unescapeSymbols(contents, '#(\\\\)+(' + '|'.join(self.predefinitions.keys()) + ')#')
+        return unescapeSymbols(contents, self.PREDEFINED_KEY_METACHARACTER + '(\\\\)+(' + '|'.join(self.predefinitions.keys()) + ')' + self.PREDEFINED_KEY_METACHARACTER)
 
     def getValue(self, key, kind):
         value = ''
@@ -248,17 +257,17 @@ class StringLibrary:
         endIndex = len(contents)
 
         while True:
-            keyEndIndex = contents.rfind('##', 0, endIndex)
+            keyEndIndex = contents.rfind(self.STRING_KEY_METACHARACTER, 0, endIndex)
             if keyEndIndex == -1:
                 break
             keyEndIndex += 2
             
-            keyStartIndex = contents.rfind('##', 0, keyEndIndex - 2)
+            keyStartIndex = contents.rfind(self.STRING_KEY_METACHARACTER, 0, keyEndIndex - 2)
             if keyStartIndex == -1:
                 break
             key = contents[keyStartIndex + 2:keyEndIndex - 2]
 
-            arguments = key.split('$')
+            arguments = key.split(TEMPLATE_ARGUMENT_SEPARATION_METACHARACTER)
 
             lineNumber = self.getLineNumber(contents, keyStartIndex)
 
@@ -280,7 +289,7 @@ class StringLibrary:
             else: #Key is escaped, remove escape
                 key = key[1:]
                 if len(key) == 0:
-                    contents = contents[:keyStartIndex] + '##' + contents[keyEndIndex:]
+                    contents = contents[:keyStartIndex] + self.STRING_KEY_METACHARACTER + contents[keyEndIndex:]
                 else:
                     contents = contents[:keyStartIndex + 2] + key + contents[keyEndIndex - 2:]
 
@@ -294,12 +303,12 @@ class StringLibrary:
         value = self.getValue(arguments[0], kind)
 
         i = 1
-        while i < len(arguments) and '#' + str(i) + '#' in value:
-            value = value.replace('#' + str(i) + '#', arguments[i])
+        while i < len(arguments) and self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value:
+            value = value.replace(self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER, arguments[i])
             i += 1
 
         if i < len(arguments):
-            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": #' + str(i) + '#')
+            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": ' + self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER)
             
         if self.containsParameter(value):
             errorFunction(lineNumber, 'Extra parameter present in string "' + arguments[0] + '"')
@@ -309,7 +318,7 @@ class StringLibrary:
         return self.replaceStringKeys(value, kind, errorFunction, stringSetName)
 
     def containsParameter(self, contents):
-        return not re.search('#(([1-9]([0-9])*)|0)#', contents) == None
+        return not re.search(self.PARAMETER_METACHARACTER + '(([1-9]([0-9])*)|0)' + self.PARAMETER_METACHARACTER, contents) == None
 
     def getWarnings(self):
         tempWarnings = self.warnings

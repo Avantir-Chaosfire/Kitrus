@@ -8,22 +8,30 @@ from KitrusRoot_Module import *
 from KitrusRoot_ParsingException import *
 from KitrusRoot_UnknownTransformationException import *
 
+CONFIGURATION_FILE_NAME = 'Kitrusfile'
+COMMON_PATH_MODE_NAME = 'configuration'
+MODULE_DEFINITION_MODE_NAME = 'modules'
+MODE_SET_METACHARACTER = '#'
+COMMON_PATH_METACHARACTER = '#'
+TRANSFORMATION_MAIN_MODULE_NAME = 'Main'
+TRANSFORMATIONS_DIRECTORY = os.path.join('..', 'transformations')
+
 def parseConfigurationLine(line, lineNumber):
     parts = line.split('=')
     if len(parts) < 2:
-        raise ParsingException('[Kitrusfile:' + str(lineNumber) + ']: Expected "=" in configuration line')
+        raise ParsingException('[' + CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + ']: Expected "=" in configuration line')
     elif len(parts) > 2:
-        raise ParsingException('[Kitrusfile:' + str(lineNumber) + ']: Too many "=" in configuration line')
+        raise ParsingException('[' + CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + ']: Too many "=" in configuration line')
     
     return parts[0], parts[1]
 
 def parseModuleLine(line, lineNumber, configuration):
     for key in configuration.keys():
-        line = line.replace('#' + key + '#', configuration[key])
+        line = line.replace(COMMON_PATH_METACHARACTER + key + COMMON_PATH_METACHARACTER, configuration[key])
 
     args = line.split(' : ')
     if len(args) not in [3, 4]:
-        raise ParsingException('[Kitrusfile:' + str(lineNumber) + ']: ' + str(len(args)) + ' arguments found in module line, expected 3 or 4')
+        raise ParsingException('[' + CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + ']: ' + str(len(args)) + ' arguments found in module line, expected 3 or 4')
 
     moduleName = args[0]
     sys.stdout.write('\t' + moduleName + '...\n')
@@ -38,7 +46,7 @@ def parseModuleLine(line, lineNumber, configuration):
 
 def getModules():
     lines = []
-    with open('Kitrusfile', 'r') as kitrusFile:
+    with open(CONFIGURATION_FILE_NAME, 'r') as kitrusFile:
         lines = kitrusFile.readlines()
 
     mode = ''
@@ -48,21 +56,21 @@ def getModules():
 
     for line in lines:
         line = line.rstrip('\n')
-        if line == '#configuration':
-            mode = 'configuration'
-        elif line == '#modules':
-            mode = 'modules'
+        if line == MODE_SET_METACHARACTER + COMMON_PATH_MODE_NAME:
+            mode = COMMON_PATH_MODE_NAME
+        elif line == MODE_SET_METACHARACTER + MODULE_DEFINITION_MODE_NAME:
+            mode = MODULE_DEFINITION_MODE_NAME
         else:
             if mode == '':
-                raise ParsingException('[Kitrusfile:' + str(lineNumber) + ']: Must defined a mode (Either #configuration or #modules).')
-            elif mode == 'configuration':
+                raise ParsingException('[' + CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + ']: Must defined a mode (Either ' + MODE_SET_METACHARACTER + COMMON_PATH_MODE_NAME + ' or ' + MODE_SET_METACHARACTER + MODULE_DEFINITION_MODE_NAME + ').')
+            elif mode == COMMON_PATH_MODE_NAME:
                 if not line == '':
                     key, value = parseConfigurationLine(line, lineNumber)
                     configuration[key] = value
-            elif mode == 'modules':
+            elif mode == MODULE_DEFINITION_MODE_NAME:
                 modules.append(parseModuleLine(line, lineNumber, configuration))
             else:
-                raise ParsingException('[Kitrusfile:' + str(lineNumber) + ']: Unknown mode (Use either #configuration or #modules).')
+                raise ParsingException('[' + CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + ']: Unknown mode (Use either ' + MODE_SET_METACHARACTER + COMMON_PATH_MODE_NAME + ' or ' + MODE_SET_METACHARACTER + MODULE_DEFINITION_MODE_NAME + ').')
         lineNumber += 1
 
     return modules
@@ -70,20 +78,20 @@ def getModules():
 def getTransformations(requestedTransformationNames, installationDirectoryRoot):
     transformations = {}
 
-    transformationsDirectory = os.path.join(installationDirectoryRoot, '..', 'transformations')
+    transformationsDirectory = os.path.join(installationDirectoryRoot, TRANSFORMATIONS_DIRECTORY)
     for transformationName in requestedTransformationNames.keys():
         if os.path.isdir(os.path.join(transformationsDirectory, transformationName)):
             sys.stdout.write('\t' + transformationName + '...\n')
             sys.stdout.flush()
 
             sys.path.append(os.path.join(transformationsDirectory, transformationName))
-            mainTransformationPythonModule = imp.load_source('Main', os.path.join(transformationsDirectory, transformationName, 'Main.py'))
+            mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectory, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
             sys.path.remove(os.path.join(transformationsDirectory, transformationName))
             transformations[transformationName] = mainTransformationPythonModule.Main()
 
             writeOutput(transformations[transformationName])
         else:
-            raise UnknownTransformationException('[modules.mli:' + str(requestedTransformationNames[transformationName]) + ']: Unknown transformation: ' + transformationName)
+            raise UnknownTransformationException('[' + CONFIGURATION_FILE_NAME + ':' + str(requestedTransformationNames[transformationName]) + ']: Unknown transformation: ' + transformationName)
 
     return transformations
 

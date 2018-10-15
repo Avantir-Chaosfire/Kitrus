@@ -9,6 +9,12 @@ class Main(Transformation):
     def __init__(self):
         super(Main, self).__init__()
 
+        self.OBJECT_FILE_NAME = 'objects.odefs'
+        self.CLASS_KEYWORD = 'class'
+        self.CLASS_LINE_METACHARACTER = '#'
+        self.OBJECT_PARAMETER_METACHARACTER = '#'
+        self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER = '$'
+
         self.strings = StringLibrary()
         self.output.messages.append('Strings: ' + str(self.strings.size()))
 
@@ -22,7 +28,7 @@ class Main(Transformation):
         
         i = 0
         for virtualFile in directory.fileChildren:
-            if virtualFile.name == 'objects.odefs':
+            if virtualFile.name == self.OBJECT_FILE_NAME:
                 directory.fileChildren.remove(virtualFile)
 
                 virtualFile.contents = self.replaceStringKeys(virtualFile, kind)
@@ -31,7 +37,7 @@ class Main(Transformation):
 
                 #directory class
                 for virtualClassDirectory in directory.directoryChildren:
-                    if virtualClassDirectory.name == 'class':
+                    if virtualClassDirectory.name == self.CLASS_KEYWORD:
                         directory.directoryChildren.remove(virtualClassDirectory)
                             
                         for obj in objects:
@@ -53,7 +59,7 @@ class Main(Transformation):
                 
                 for virtualClassFile in directory.fileChildren:
                     #file class
-                    if virtualClassFile.name.startswith('class.') or virtualClassFile.name == 'class':
+                    if virtualClassFile.name.startswith(self.CLASS_KEYWORD + '.') or virtualClassFile.name == self.CLASS_KEYWORD:
                         directory.fileChildren.remove(virtualClassFile)
                         
                         classFileNameComponents = virtualClassFile.name.split('.', 1)
@@ -71,7 +77,7 @@ class Main(Transformation):
 
                         virtualClassFile.contents = ''
                         for line in virtualClassFileLines:
-                            if line.startswith('#class '):
+                            if line.startswith(self.CLASS_LINE_METACHARACTER + self.CLASS_KEYWORD + ' '):
                                 classLine = line[7:]
                                 line = ''
 
@@ -80,7 +86,7 @@ class Main(Transformation):
                                     
                                     i = 0
                                     while i < len(obj.args):
-                                        objectLine = objectLine.replace('#' + str(i) + '#', obj.args[i])
+                                        objectLine = objectLine.replace(self.OBJECT_PARAMETER_METACHARACTER + str(i) + self.OBJECT_PARAMETER_METACHARACTER, obj.args[i])
                                         i += 1
 
                                     line += objectLine
@@ -111,7 +117,7 @@ class Main(Transformation):
                 existingDirectory.directoryChildren.append(transientChildDirectory)
 
     def parseObject(self, line):
-        arguments = line.split('$')
+        arguments = line.split(self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER)
 
         arguments = unescapeParameterSeparators(arguments)
 
@@ -136,7 +142,7 @@ class Main(Transformation):
     def replaceObjectKeysInFile(self, virtualFile, args):
         i = 0
         while i < len(args):
-            virtualFile.contents = virtualFile.contents.replace('#' + str(i) + '#', args[i])
+            virtualFile.contents = virtualFile.contents.replace(self.OBJECT_PARAMETER_METACHARACTER + str(i) + self.OBJECT_PARAMETER_METACHARACTER, args[i])
             i += 1
 
         virtualFile.contents = unescapeSymbols(virtualFile.contents, ESCAPED_PARAMETER_PATTERN)
