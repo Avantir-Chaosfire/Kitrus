@@ -14,6 +14,7 @@ class StringLibrary:
         self.PREDEFINED_KEY_METACHARACTER = '#'
         self.PARAMETER_METACHARACTER = '#'
         self.STRING_KEY_METACHARACTER = '##'
+        self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$']
         
         self.complete = False
         self.warnings = []
@@ -121,6 +122,10 @@ class StringLibrary:
         return size
 
     def addToStringSet(self, setName, key, value, lineNumber):
+        for illegalCharacter in self.ILLEGAL_STRING_KEY_CHARACTERS:
+            if illegalCharacter in key:
+                raise StringParsingException(setName, lineNumber, 'Illegal character "' + illegalCharacter + '" found in string key: ' + key)
+        
         if key not in self.stringSets[setName].strings.keys():
             self.stringSets[setName].strings[key] = {}
 
