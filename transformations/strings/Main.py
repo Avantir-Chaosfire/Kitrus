@@ -31,7 +31,7 @@ class Main(Transformation):
             if virtualFile.name == self.OBJECT_FILE_NAME:
                 directory.fileChildren.remove(virtualFile)
 
-                virtualFile.contents = self.replaceStringKeys(virtualFile, kind)
+                virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
                 virtualObjectFileLines = virtualFile.contents.split('\n')
                 objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines]
 
@@ -96,12 +96,12 @@ class Main(Transformation):
             i += 1
 
         for virtualFile in directory.fileChildren:
-            virtualFile.contents = self.replaceStringKeys(virtualFile, kind)
+            virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
 
         for virtualDirectory in directory.directoryChildren:
             self.applyToDirectory(virtualDirectory, kind, errorPath)
 
-    def replaceStringKeys(self, virtualFile, kind):
+    def replaceStringKeys(self, virtualFile, kind, errorPath):
         return self.strings.replaceStringKeys(virtualFile.contents, kind, lambda l, m: self.strings.raiseExportWarning(os.path.join(errorPath, virtualFile.name), l, m))
 
     def mergeDirectories(self, existingDirectory, transientDirectory):

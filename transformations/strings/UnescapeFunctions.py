@@ -6,10 +6,13 @@ TEMPLATE_ARGUMENT_SEPARATION_METACHARACTER = '$'
 
 def unescapeSymbols(contents, pattern):
     escapedSymbol = re.search(pattern, contents)
+    startIndex = 0
     while not escapedSymbol == None:
-        backslashIndex = escapedSymbol.span()[0] + 1
+        backslashIndex = escapedSymbol.span()[0] + 1 + startIndex
         contents = contents[:backslashIndex] + contents[backslashIndex + 1:]
-        escapedSymbol = self.escapedSymbol(contents[escapedSymbol.span()[1]:])
+        escapedSymbol = re.search(pattern, contents[backslashIndex:])
+
+        startIndex = backslashIndex
 
     return contents
 
