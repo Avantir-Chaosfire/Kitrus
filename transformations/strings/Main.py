@@ -25,7 +25,7 @@ class Main(Transformation):
 
     def applyToDirectory(self, directory, kind, errorPath):
         errorPath = os.path.join(errorPath, directory.name)
-        
+
         i = 0
         for virtualFile in directory.fileChildren:
             if virtualFile.name == self.OBJECT_FILE_NAME:
@@ -56,11 +56,12 @@ class Main(Transformation):
                                 self.replaceObjectKeysInDirectory(virtualObjectDirectory, obj.args)
                                 directory.directoryChildren.append(virtualObjectDirectory)
                         break
-                
+                    
+                newDirectoryFileChildren = copy.copy(directory.fileChildren)
                 for virtualClassFile in directory.fileChildren:
                     #file class
                     if virtualClassFile.name.startswith(self.CLASS_KEYWORD + '.') or virtualClassFile.name == self.CLASS_KEYWORD:
-                        directory.fileChildren.remove(virtualClassFile)
+                        newDirectoryFileChildren.remove(virtualClassFile)
                         
                         classFileNameComponents = virtualClassFile.name.split('.', 1)
                         classFileExtension = '.' + classFileNameComponents[1] if len(classFileNameComponents) > 1 else ''
@@ -69,7 +70,7 @@ class Main(Transformation):
                             virtualObjectFile = copy.copy(virtualClassFile)
                             virtualObjectFile.name = obj.name + classFileExtension
                             self.replaceObjectKeysInFile(virtualObjectFile, obj.args)
-                            directory.fileChildren.append(virtualObjectFile)
+                            newDirectoryFileChildren.append(virtualObjectFile)
                     #line class
                     else:
                         virtualClassFileLines = virtualClassFile.contents.split('\n')
@@ -92,6 +93,7 @@ class Main(Transformation):
                                     line += objectLine
                             virtualClassFile.contents += line
                         virtualClassFile.contents = virtualClassFile.contents.rstrip('\n')
+                directory.fileChildren = newDirectoryFileChildren
                 break
             i += 1
 
