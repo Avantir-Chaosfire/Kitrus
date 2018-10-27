@@ -9,11 +9,13 @@ class Main(Transformation):
     def __init__(self):
         super(Main, self).__init__()
 
-        self.OBJECT_FILE_NAME = 'objects.odefs'
+        self.OBJECT_FILE_EXTENSION = '.odefs'
         self.CLASS_KEYWORD = 'class'
         self.CLASS_LINE_METACHARACTER = '#'
         self.OBJECT_PARAMETER_METACHARACTER = '#'
         self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER = '$'
+        self.CLASS_OBJECT_ASSOCIATION_METACHARACTER = '$'
+        self.CLASS_OBJECT_ASSOCIATION_DEFAULT_NAME = 'objects'
 
         self.strings = StringLibrary()
         self.output.messages.append('Strings: ' + str(self.strings.size()))
@@ -26,18 +28,25 @@ class Main(Transformation):
     def applyToDirectory(self, directory, kind, errorPath):
         errorPath = os.path.join(errorPath, directory.name)
 
+        newDirectoryFileChildren = copy.copy(directory.fileChildren)
+
         i = 0
         for virtualFile in directory.fileChildren:
-            if virtualFile.name == self.OBJECT_FILE_NAME:
-                directory.fileChildren.remove(virtualFile)
-
+            if virtualFile.name.endswith(self.OBJECT_FILE_EXTENSION):
+                newDirectoryFileChildren.remove(virtualFile)
+                
                 virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
                 virtualObjectFileLines = virtualFile.contents.split('\n')
                 objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines]
 
+                classObjectAssociationName = virtualFile.name[:-len(self.OBJECT_FILE_EXTENSION)]
+                classKeyword = self.CLASS_KEYWORD
+                if not classObjectAssociationName == self.CLASS_OBJECT_ASSOCIATION_DEFAULT_NAME:
+                    classKeyword = self.CLASS_KEYWORD + self.CLASS_OBJECT_ASSOCIATION_METACHARACTER + classObjectAssociationName
+
                 #directory class
                 for virtualClassDirectory in directory.directoryChildren:
-                    if virtualClassDirectory.name == self.CLASS_KEYWORD:
+                    if virtualClassDirectory.name == classKeyword:
                         directory.directoryChildren.remove(virtualClassDirectory)
                             
                         for obj in objects:
@@ -56,11 +65,10 @@ class Main(Transformation):
                                 self.replaceObjectKeysInDirectory(virtualObjectDirectory, obj.args)
                                 directory.directoryChildren.append(virtualObjectDirectory)
                         break
-                    
-                newDirectoryFileChildren = copy.copy(directory.fileChildren)
+
                 for virtualClassFile in directory.fileChildren:
                     #file class
-                    if virtualClassFile.name.startswith(self.CLASS_KEYWORD + '.') or virtualClassFile.name == self.CLASS_KEYWORD:
+                    if virtualClassFile.name.startswith(classKeyword + '.') or virtualClassFile.name == classKeyword:
                         newDirectoryFileChildren.remove(virtualClassFile)
                         
                         classFileNameComponents = virtualClassFile.name.split('.', 1)
@@ -73,13 +81,14 @@ class Main(Transformation):
                             newDirectoryFileChildren.append(virtualObjectFile)
                     #line class
                     else:
+                        classLineEstablisher = self.CLASS_LINE_METACHARACTER + classKeyword + ' '
                         virtualClassFileLines = virtualClassFile.contents.split('\n')
                         virtualClassFileLines = [line + '\n' for line in virtualClassFileLines]
 
                         virtualClassFile.contents = ''
                         for line in virtualClassFileLines:
-                            if line.startswith(self.CLASS_LINE_METACHARACTER + self.CLASS_KEYWORD + ' '):
-                                classLine = line[7:]
+                            if line.startswith(classLineEstablisher):
+                                classLine = line[len(classLineEstablisher):]
                                 line = ''
 
                                 for obj in objects:
@@ -93,9 +102,9 @@ class Main(Transformation):
                                     line += objectLine
                             virtualClassFile.contents += line
                         virtualClassFile.contents = virtualClassFile.contents.rstrip('\n')
-                directory.fileChildren = newDirectoryFileChildren
-                break
             i += 1
+
+        directory.fileChildren = newDirectoryFileChildren
 
         for virtualFile in directory.fileChildren:
             virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
