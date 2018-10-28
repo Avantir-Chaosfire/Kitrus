@@ -37,7 +37,7 @@ class Main(Transformation):
                 
                 virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
                 virtualObjectFileLines = virtualFile.contents.split('\n')
-                objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines]
+                objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines if not line == '']
 
                 classObjectAssociationName = virtualFile.name[:-len(self.OBJECT_FILE_EXTENSION)]
                 classKeyword = self.CLASS_KEYWORD
