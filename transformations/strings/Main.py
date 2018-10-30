@@ -116,7 +116,17 @@ class Main(Transformation):
         return self.strings.replaceStringKeys(virtualFile.contents, kind, lambda l, m: self.strings.raiseExportWarning(os.path.join(errorPath, virtualFile.name), l, m))
 
     def mergeDirectories(self, existingDirectory, transientDirectory):
-        existingDirectory.fileChildren += transientDirectory.fileChildren
+        #Merge files
+        for transientFile in transientDirectory.fileChildren:
+            found = False
+            for file in existingDirectory.fileChildren:
+                if file.name == transientFile.name:
+                    found = True
+                    break
+            if not found:
+                existingDirectory.fileChildren.append(transientFile)
+
+        #Merge child directories
         for transientChildDirectory in transientDirectory.directoryChildren:
             merge = False
             for childDirectory in existingDirectory.directoryChildren:
