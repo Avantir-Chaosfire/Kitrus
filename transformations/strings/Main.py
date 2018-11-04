@@ -25,8 +25,8 @@ class Main(Transformation):
 
         self.output.warnings = self.strings.getWarnings()
 
-    def applyToDirectory(self, directory, kind, errorPath):
-        errorPath = os.path.join(errorPath, directory.name)
+    def applyToDirectory(self, directory, kind, path):
+        path = os.path.join(path, directory.name)
 
         newDirectoryFileChildren = copy.copy(directory.fileChildren)
 
@@ -35,7 +35,7 @@ class Main(Transformation):
             if virtualFile.name.endswith(self.OBJECT_FILE_EXTENSION):
                 newDirectoryFileChildren.remove(virtualFile)
                 
-                virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
+                virtualFile.contents = self.replaceStringKeys(virtualFile, kind, path)
                 virtualObjectFileLines = virtualFile.contents.split('\n')
                 objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines if not line == '']
 
@@ -107,13 +107,13 @@ class Main(Transformation):
         directory.fileChildren = newDirectoryFileChildren
 
         for virtualFile in directory.fileChildren:
-            virtualFile.contents = self.replaceStringKeys(virtualFile, kind, errorPath)
+            virtualFile.contents = self.replaceStringKeys(virtualFile, kind, path)
 
         for virtualDirectory in directory.directoryChildren:
-            self.applyToDirectory(virtualDirectory, kind, errorPath)
+            self.applyToDirectory(virtualDirectory, kind, path)
 
-    def replaceStringKeys(self, virtualFile, kind, errorPath):
-        return self.strings.replaceStringKeys(virtualFile.contents, kind, lambda l, m: self.strings.raiseExportWarning(os.path.join(errorPath, virtualFile.name), l, m))
+    def replaceStringKeys(self, virtualFile, kind, path):
+        return self.strings.replaceStringKeys(path.split(os.sep)[1:], virtualFile.contents, kind, lambda l, m: self.strings.raiseExportWarning(os.path.join(path, virtualFile.name), l, m))
 
     def mergeDirectories(self, existingDirectory, transientDirectory):
         #Merge files

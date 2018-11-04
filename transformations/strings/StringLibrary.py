@@ -15,13 +15,15 @@ class StringLibrary:
         self.PARAMETER_METACHARACTER = '#'
         self.STRING_KEY_METACHARACTER = '##'
         self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$']
+        self.MINECRAFT_FUNCTION_DIRECTORY_SEPARATOR = '/'
         
         self.complete = False
         self.warnings = []
         
         self.predefinitions = {}
-        self.predefinitions['UUID'] = lambda: str(random.randint(-2147483648, 2147483647))
-        self.predefinitions['Newline'] = lambda: '\n'
+        self.predefinitions['UUID'] = lambda path: str(random.randint(-2147483648, 2147483647))
+        self.predefinitions['Newline'] = lambda path: '\n'
+        self.predefinitions['~'] = lambda path: self.MINECRAFT_FUNCTION_DIRECTORY_SEPARATOR.join(path)
 
         self.stringSets = {}
         self.parsedStringSetNames = []
@@ -87,7 +89,7 @@ class StringLibrary:
                         raise StringParsingException(setName, lineNumber, 'Expected 3 arguments to ' + self.LINE_START_METACHARACTER + self.JOIN_STATEMENT_KEYWORD + ' but found ' + str(len(args)))
                     
                     kind = args[1]
-                    join = self.replacePredefinedKeys(args[2])
+                    join = self.replacePredefinedKeys([], args[2])
                     
                     self.stringSets[setName].joins[kind] = join
 
@@ -130,7 +132,7 @@ class StringLibrary:
             self.stringSets[setName].strings[key] = {}
 
         for kind in self.stringSets[setName].kinds:
-            stringValue = self.replaceStringKeys(value, kind, lambda l, m: self.raiseException(StringParsingException(setName, lineNumber, m)), setName)
+            stringValue = self.replaceStringKeys([], value, kind, lambda l, m: self.raiseException(StringParsingException(setName, lineNumber, m)), setName)
                 
             if kind in self.stringSets[setName].strings[key].keys():
                 if kind in self.stringSets[setName].joins.keys():
@@ -208,13 +210,13 @@ class StringLibrary:
         
         return True
 
-    def replacePredefinedKeys(self, contents):
+    def replacePredefinedKeys(self, path, contents):
         endIndex = len(contents)
         
         for (key, value) in self.predefinitions.items():
             hashKey = self.PREDEFINED_KEY_METACHARACTER + key + self.PREDEFINED_KEY_METACHARACTER
             while hashKey in contents:
-                contents = contents.replace(hashKey, value(), 1)
+                contents = contents.replace(hashKey, value(path), 1)
 
         return unescapeSymbols(contents, self.PREDEFINED_KEY_METACHARACTER + '(\\\\)+(' + '|'.join(self.predefinitions.keys()) + ')' + self.PREDEFINED_KEY_METACHARACTER)
 
@@ -247,8 +249,8 @@ class StringLibrary:
 
         return string
 
-    def replaceStringKeys(self, contents, kind, errorFunction, stringSetName = None):
-        contents = self.replacePredefinedKeys(contents)
+    def replaceStringKeys(self, path, contents, kind, errorFunction, stringSetName = None):
+        contents = self.replacePredefinedKeys(path, contents)
 
         if self.containsParameter(contents):
             return contents
@@ -285,7 +287,7 @@ class StringLibrary:
                         errorFunction(lineNumber, 'Unknown string key "' + key + '"')
                 elif len(arguments) > 1:
                     if arguments[0] in stringKeys:
-                        value = self.replaceParameters(arguments, kind, lineNumber, errorFunction, stringSetName)
+                        value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
                         contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                     else:
                         errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
@@ -302,7 +304,7 @@ class StringLibrary:
             
         return contents
 
-    def replaceParameters(self, arguments, kind, lineNumber, errorFunction, stringSetName):
+    def replaceParameters(self, path, arguments, kind, lineNumber, errorFunction, stringSetName):
         arguments = unescapeParameterSeparators(arguments)
             
         value = self.getValue(arguments[0], kind)
@@ -320,7 +322,7 @@ class StringLibrary:
 
         value = unescapeSymbols(value, ESCAPED_PARAMETER_PATTERN)
 
-        return self.replaceStringKeys(value, kind, errorFunction, stringSetName)
+        return self.replaceStringKeys(path, value, kind, errorFunction, stringSetName)
 
     def containsParameter(self, contents):
         return not re.search(self.PARAMETER_METACHARACTER + '(([1-9]([0-9])*)|0)' + self.PARAMETER_METACHARACTER, contents) == None
