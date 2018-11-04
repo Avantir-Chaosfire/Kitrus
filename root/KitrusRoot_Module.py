@@ -12,7 +12,7 @@ class Module:
         self.transformationNames = transformationNames
 
         #Generate virtual files
-        self.rootDirectory = VirtualDirectory('.', self.name)
+        self.rootDirectory = VirtualDirectory(self.name, '.')
 
         #Delete everything at self.destination
         try:

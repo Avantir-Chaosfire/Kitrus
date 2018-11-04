@@ -5,8 +5,8 @@ from StringParsingException import *
 from UnescapeFunctions import *
 
 class StringLibrary:
-    def __init__(self):
-        self.STRINGS_DIRECTORY_NAME = 'strings'
+    def __init__(self, configurationDirectory):
+        self.TRANSFORMATION_NAME = 'strings'
         self.STRING_FILE_EXTENSION = '.str'
         self.LINE_START_METACHARACTER = '#'
         self.INCLUDE_STATEMENT_KEYWORD = 'include'
@@ -15,6 +15,7 @@ class StringLibrary:
         self.PARAMETER_METACHARACTER = '#'
         self.STRING_KEY_METACHARACTER = '##'
         self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$']
+        self.KITRUS_STRING_DIRECTORY_SEPARATOR = '/'
         self.MINECRAFT_FUNCTION_DIRECTORY_SEPARATOR = '/'
         
         self.complete = False
@@ -27,43 +28,36 @@ class StringLibrary:
 
         self.stringSets = {}
         self.parsedStringSetNames = []
-        self.stringFilesToParse = []
-
-        stringsDirectoryPath = os.path.join(self.STRINGS_DIRECTORY_NAME, '')
-        self.stringsDirectoryNameLength = len(stringsDirectoryPath)
-
-        directories = [stringsDirectoryPath]
-        expandingDirectories = directories
-        while True:
-            subdirectories = []
-            for directory in expandingDirectories:
-                subdirectories += [os.path.join(directory, o) for o in os.listdir(directory) if os.path.isdir(os.path.join(directory, o))]
-            if not subdirectories:
-                break
-            expandingDirectories = subdirectories
-            directories += subdirectories
-
-        for directory in directories:
-            self.stringFilesToParse += glob.glob(os.path.join(directory, '*' + self.STRING_FILE_EXTENSION))
+        self.stringFilesToParse = self.getAllStringFiles(configurationDirectory)
 
         while len(self.stringFilesToParse) > 0:
             self.parseStringFile(self.stringFilesToParse[0])
 
         self.complete = True
 
-    def parseStringFile(self, fileName):
-        lines = []
-        with codecs.open(fileName, encoding = 'utf-8') as stringsFile:
-            lines = stringsFile.readlines()
+    def getAllStringFiles(self, configurationDirectory):
+        stringFiles = [file for file in configurationDirectory.fileChildren if file.name.endswith(self.STRING_FILE_EXTENSION)]
 
-        setName = fileName[self.stringsDirectoryNameLength:-4].replace('\\', '/')
+        for stringFile in stringFiles:
+            stringFile.name = stringFile.name[:-len(self.STRING_FILE_EXTENSION)]
 
+        for virtualChildDirectory in configurationDirectory.directoryChildren:
+            stringFiles += self.getAllStringFiles(virtualChildDirectory)
+
+        if not configurationDirectory.name == self.TRANSFORMATION_NAME:
+            for stringFile in stringFiles:
+                stringFile.name = configurationDirectory.name + self.KITRUS_STRING_DIRECTORY_SEPARATOR + stringFile.name
+
+        return stringFiles
+
+    def parseStringFile(self, virtualFile):
+        lines = virtualFile.contents.split('\n')
+
+        setName = virtualFile.name
         self.stringSets[setName] = StringSet(setName)
 
         lineNumber = 1
         for line in lines:
-            line = line.rstrip('\n')
-
             if not line == '':
                 args = self.getArgs(line)
 
@@ -76,7 +70,10 @@ class StringLibrary:
 
                     if dependency not in self.parsedStringSetNames:
                         if dependency not in self.stringSets.keys():
-                            self.parseStringFile(os.path.join(self.STRINGS_DIRECTORY_NAME, *(dependency.split('/'))) + self.STRING_FILE_EXTENSION)
+                            for virtualFileToParse in self.stringFilesToParse:
+                                if virtualFileToParse.name == dependency:
+                                    self.parseStringFile(virtualFileToParse)
+                                    break
                         else:
                             raise StringParsingException(setName, lineNumber, 'Cyclic dependency found; Cannot be resolved.')
 
@@ -109,7 +106,7 @@ class StringLibrary:
             lineNumber += 1
 
         self.parsedStringSetNames.append(setName)
-        self.stringFilesToParse.remove(fileName)
+        self.stringFilesToParse.remove(virtualFile)
 
     def raiseException(self, e):
         raise e

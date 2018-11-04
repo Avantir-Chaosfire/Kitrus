@@ -3,7 +3,7 @@ import copy, os
 from KitrusRoot_Transformation import *
 
 class Main(Transformation):
-    def __init__(self):
+    def __init__(self, configurationDirectory):
         super(Main, self).__init__()
 
         self.fileTypeCounts = {}

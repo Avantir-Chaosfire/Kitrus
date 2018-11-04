@@ -6,7 +6,7 @@ from Object import *
 from UnescapeFunctions import *
 
 class Main(Transformation):
-    def __init__(self):
+    def __init__(self, configurationDirectory):
         super(Main, self).__init__()
 
         self.OBJECT_FILE_EXTENSION = '.odefs'
@@ -17,7 +17,7 @@ class Main(Transformation):
         self.CLASS_OBJECT_ASSOCIATION_METACHARACTER = '$'
         self.CLASS_OBJECT_ASSOCIATION_DEFAULT_NAME = 'objects'
 
-        self.strings = StringLibrary()
+        self.strings = StringLibrary(configurationDirectory)
         self.output.messages.append('Strings: ' + str(self.strings.size()))
 
     def apply(self, rootDirectory, kind):

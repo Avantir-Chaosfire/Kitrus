@@ -14,6 +14,7 @@ MODULE_DEFINITION_MODE_NAME = 'modules'
 MODE_SET_METACHARACTER = '#'
 COMMON_PATH_METACHARACTER = '#'
 TRANSFORMATION_MAIN_MODULE_NAME = 'Main'
+CONFIGURATION_DIRECTORY = 'configuration'
 TRANSFORMATIONS_DIRECTORY = os.path.join('..', 'transformations')
 
 def parseConfigurationLine(line, lineNumber):
@@ -77,6 +78,7 @@ def getModules():
 
 def getTransformations(requestedTransformationNames, installationDirectoryRoot):
     transformations = {}
+    projectDirectory = os.getcwd()
 
     transformationsDirectory = os.path.join(installationDirectoryRoot, TRANSFORMATIONS_DIRECTORY)
     for transformationName in requestedTransformationNames.keys():
@@ -84,10 +86,14 @@ def getTransformations(requestedTransformationNames, installationDirectoryRoot):
             sys.stdout.write('\t' + transformationName + '...\n')
             sys.stdout.flush()
 
+            configurationDirectory = VirtualDirectory(transformationName)
+            if os.path.isdir(os.path.join(CONFIGURATION_DIRECTORY, transformationName)):
+                configurationDirectory = VirtualDirectory(transformationName, CONFIGURATION_DIRECTORY)
+            
             sys.path.append(os.path.join(transformationsDirectory, transformationName))
             mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectory, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
             sys.path.remove(os.path.join(transformationsDirectory, transformationName))
-            transformations[transformationName] = mainTransformationPythonModule.Main()
+            transformations[transformationName] = mainTransformationPythonModule.Main(configurationDirectory)
 
             writeOutput(transformations[transformationName])
         else:
