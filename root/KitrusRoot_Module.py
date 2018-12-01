@@ -27,3 +27,6 @@ class Module:
         (parentDirectory, directoryName) = os.path.split(self.destination)
         self.rootDirectory.name = directoryName
         self.rootDirectory.write(parentDirectory)
+
+    def getAsParameter(self):
+        return KitrusRoot_ParameterModule(self,name, self.kind, copy.copy(self.transformationNames), copy.deepcopy(self.rootDirectory))

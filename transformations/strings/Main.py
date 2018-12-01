@@ -6,7 +6,7 @@ from Object import *
 from UnescapeFunctions import *
 
 class Main(Transformation):
-    def __init__(self, configurationDirectory):
+    def __init__(self, configurationDirectory, parametermodules):
         super(Main, self).__init__()
 
         self.OBJECT_FILE_EXTENSION = '.odefs'
@@ -25,6 +25,9 @@ class Main(Transformation):
 
         self.output.warnings = self.strings.getWarnings()
 
+#TODO: There's a semi-major problem here. Namely if you have two classes both with instances of the
+#same name and both classes have a file with the same name, then which file actually gets used is
+#arbitrary, based upon the order in which the classes' odefs files are parsed.
     def applyToDirectory(self, directory, kind, path):
         path = os.path.join(path, directory.name)
 

@@ -76,9 +76,10 @@ def getModules():
 
     return modules
 
-def getTransformations(requestedTransformationNames, installationDirectoryRoot):
+def getTransformations(requestedTransformationNames, installationDirectoryRoot, modules):
     transformations = {}
     projectDirectory = os.getcwd()
+    parameterModules = map(lambda m: m.getAsParameter(), modules)
 
     transformationsDirectory = os.path.join(installationDirectoryRoot, TRANSFORMATIONS_DIRECTORY)
     for transformationName in requestedTransformationNames.keys():
@@ -93,7 +94,7 @@ def getTransformations(requestedTransformationNames, installationDirectoryRoot):
             sys.path.append(os.path.join(transformationsDirectory, transformationName))
             mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectory, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
             sys.path.remove(os.path.join(transformationsDirectory, transformationName))
-            transformations[transformationName] = mainTransformationPythonModule.Main(configurationDirectory)
+            transformations[transformationName] = mainTransformationPythonModule.Main(configurationDirectory, parameterModules)
 
             writeOutput(transformations[transformationName])
         else:
@@ -126,7 +127,7 @@ def main(projectDirectory):
                 requestedTransformationNames[transformationName] = lineNumber
         lineNumber += 1
     
-    transformations = getTransformations(requestedTransformationNames, installationDirectoryRoot)
+    transformations = getTransformations(requestedTransformationNames, installationDirectoryRoot, modules)
 
     for module in modules:
         sys.stdout.write('Exporting ' + module.name + '...\n')
