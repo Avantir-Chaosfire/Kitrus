@@ -1,6 +1,7 @@
 import copy, os, codecs
 
 from KitrusRoot_Transformation import *
+from KitrusRoot_VirtualDirectory import *
 
 from ConfigurationParsingException import *
 
@@ -9,19 +10,25 @@ from ConfigurationParsingException import *
 #associated with a module, instead of just the current module. That may not be something people want
 #to do, so probably add a parameter for that in the configuration.
 class Main(Transformation):
-    def __init__(self, configurationDirectory, parametermodules):
-        super(Main, self).__init__()
-        
+    def __init__(self, configurationDirectory):
         self.MINECRAFT_FUNCTION_COMMAND = 'function'
         self.MINECRAFT_NAMESPACE_PATH_SEPARATOR = ':'
         self.MINECRAFT_FUNCTION_PATH_SEPARATOR = '/'
         self.MINECRAFT_FUNCTION_FILE_EXTENSION = '.mcfunction'
+        self.NAMESPACES_DIRECTORY = 'namespaces'
         self.NAMESPACE_CONFIGURATION_FILE_NAME = 'namespaces.cfg'
 
+        namespaceConfigurationDirectory = VirtualDirectory(self.NAMESPACES_DIRECTORY)
+        for virtualDirectory in configurationDirectory.directoryChildren:
+            if virtualDirectory.name == self.NAMESPACES_DIRECTORY:
+                namespaceConfigurationDirectory = virtualDirectory
+                break
+
         lines = []
-        for virtualFile in configurationDirectory.fileChildren:
+        for virtualFile in namespaceConfigurationDirectory.fileChildren:
             if virtualFile.name == self.NAMESPACE_CONFIGURATION_FILE_NAME:
                 lines = virtualFile.contents.split('\n')
+                break
 
         self.moduleNamespaces = {}
         lineNumber = 1
@@ -33,11 +40,13 @@ class Main(Transformation):
                 self.moduleNamespaces[line[:indexOfEquals]] = line[indexOfEquals + 1:]
             lineNumber += 1
 
-    def apply(self, rootDirectory, kind):
-        functionIdentifier = self.MINECRAFT_FUNCTION_COMMAND + ' ' + self.moduleNamespaces[rootDirectory.name] + self.MINECRAFT_NAMESPACE_PATH_SEPARATOR
-        
-        functionNames = self.getFunctionNames('', rootDirectory)
-        self.stripFromDirectory(rootDirectory, functionNames, functionIdentifier)
+    def apply(self, modules):
+        for module in modules:
+            self.outputMessage('Transforming ' + module.name + '...')
+            functionIdentifier = self.MINECRAFT_FUNCTION_COMMAND + ' ' + self.moduleNamespaces[module.rootDirectory.name] + self.MINECRAFT_NAMESPACE_PATH_SEPARATOR
+            
+            functionNames = self.getFunctionNames('', module.rootDirectory)
+            self.stripFromDirectory(module.rootDirectory, functionNames, functionIdentifier)
 
     def getFunctionNames(self, path, virtualDirectory):
         functionNames = [self.assemblePath(path, virtualFile.name[:-len(self.MINECRAFT_FUNCTION_FILE_EXTENSION)]) for virtualFile in virtualDirectory.fileChildren if virtualFile.name.endswith(self.MINECRAFT_FUNCTION_FILE_EXTENSION)]

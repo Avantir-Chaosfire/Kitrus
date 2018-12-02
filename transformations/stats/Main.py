@@ -1,27 +1,25 @@
-import copy, os
-
 from KitrusRoot_Transformation import *
 
 class Main(Transformation):
-    def __init__(self, configurationDirectory, parametermodules):
-        super(Main, self).__init__()
-
+    def __init__(self, configurationDirectory):
         self.fileTypeCounts = {}
         self.totalCommandCount = 0
 
-    def apply(self, rootDirectory, kind):
-        self.fileTypeCounts = {}
-        self.totalCommandCount = 0
-            
-        rootDirectory = self.countDirectory(rootDirectory)
+    def apply(self, modules):
+        for module in modules:
+            self.outputMessage(module.name + ':')
+            self.fileTypeCounts = {}
+            self.totalCommandCount = 0
+                
+            rootDirectory = self.countDirectory(module.rootDirectory)
 
-        self.output.messages.append('File Types:')
+            self.outputMessage('\tFile Types:')
 
-        for fileExtension, fileCount in self.fileTypeCounts.items():
-            self.output.messages.append('\t' + fileExtension + ': ' + str(fileCount))
+            for fileExtension, fileCount in self.fileTypeCounts.items():
+                self.outputMessage('\t\t' + fileExtension + ': ' + str(fileCount))
 
-        if self.totalCommandCount > 0:
-            self.output.messages.append('Commands: ' + str(self.totalCommandCount))
+            if self.totalCommandCount > 0:
+                self.outputMessage('\tCommands: ' + str(self.totalCommandCount))
 
     def countDirectory(self, directory):
         for virtualFile in directory.fileChildren:

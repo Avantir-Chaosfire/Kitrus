@@ -2,14 +2,13 @@ import os, shutil
 
 from KitrusRoot_VirtualDirectory import *
 from KitrusRoot_VirtualFile import *
-from KitrusRoot_Output import *
+from KitrusRoot_ParameterModule import *
 
 class Module:
-    def __init__(self, name, kind, destination, transformationNames):
+    def __init__(self, name, kind, destination):
         self.name = name
         self.kind = kind
         self.destination = destination
-        self.transformationNames = transformationNames
 
         #Generate virtual files
         self.rootDirectory = VirtualDirectory(self.name, '.')
@@ -19,9 +18,6 @@ class Module:
             shutil.rmtree(self.destination)
         except FileNotFoundError:
             pass
-            
-    def transform(self, transformation):
-        transformation.apply(self.rootDirectory, self.kind)
 
     def export(self):
         (parentDirectory, directoryName) = os.path.split(self.destination)
@@ -29,4 +25,4 @@ class Module:
         self.rootDirectory.write(parentDirectory)
 
     def getAsParameter(self):
-        return KitrusRoot_ParameterModule(self,name, self.kind, copy.copy(self.transformationNames), copy.deepcopy(self.rootDirectory))
+        return ParameterModule(self.name, self.kind, self.rootDirectory)

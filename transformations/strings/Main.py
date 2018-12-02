@@ -1,14 +1,13 @@
 import copy, os
 
 from KitrusRoot_Transformation import *
+from KitrusRoot_VirtualDirectory import *
 from StringLibrary import *
 from Object import *
 from UnescapeFunctions import *
 
 class Main(Transformation):
-    def __init__(self, configurationDirectory, parametermodules):
-        super(Main, self).__init__()
-
+    def __init__(self, configurationDirectory):
         self.OBJECT_FILE_EXTENSION = '.odefs'
         self.CLASS_KEYWORD = 'class'
         self.CLASS_LINE_METACHARACTER = '#'
@@ -16,14 +15,25 @@ class Main(Transformation):
         self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER = '$'
         self.CLASS_OBJECT_ASSOCIATION_METACHARACTER = '$'
         self.CLASS_OBJECT_ASSOCIATION_DEFAULT_NAME = 'objects'
+        self.STRINGS_DIRECTORY = 'strings'
 
-        self.strings = StringLibrary(configurationDirectory)
-        self.output.messages.append('Strings: ' + str(self.strings.size()))
+        stringsConfigurationDirectory = VirtualDirectory(self.STRINGS_DIRECTORY)
+        for virtualDirectory in configurationDirectory.directoryChildren:
+            if virtualDirectory.name == self.STRINGS_DIRECTORY:
+                stringsConfigurationDirectory = virtualDirectory
+                break
 
-    def apply(self, rootDirectory, kind):
-        rootDirectory = self.applyToDirectory(rootDirectory, kind, '')
+        self.strings = StringLibrary(stringsConfigurationDirectory)
+        self.outputMessage('Strings: ' + str(self.strings.size()))
 
-        self.output.warnings = self.strings.getWarnings()
+    def apply(self, modules):
+        for module in modules:
+            self.outputMessage('Transforming ' + module.name + '...')
+            module.rootDirectory = self.applyToDirectory(module.rootDirectory, module.kind, '')
+
+            warnings = self.strings.getWarnings()
+            for warning in warnings:
+                self.outputWarning(warning)
 
 #TODO: There's a semi-major problem here. Namely if you have two classes both with instances of the
 #same name and both classes have a file with the same name, then which file actually gets used is
