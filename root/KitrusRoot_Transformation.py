@@ -2,9 +2,6 @@ import sys
 
 class Transformation:
     initialized = False
-    
-    def __init__(self):
-        self.transformationDataDirectory = None
 
     def outputMessage(self, message):
         if Transformation.initialized:
