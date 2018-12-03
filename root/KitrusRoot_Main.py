@@ -1,6 +1,6 @@
 #!python3
 
-import sys, os, imp
+import sys, os, imp, copy
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_Module import *
@@ -17,6 +17,7 @@ MODE_SET_METACHARACTER = '#'
 COMMON_PATH_METACHARACTER = '#'
 TRANSFORMATION_MAIN_MODULE_NAME = 'Main'
 CONFIGURATION_DIRECTORY = 'configuration'
+TRANSFORMATION_DATA_DIRECTORY = '.transformation_data'
 TRANSFORMATIONS_DIRECTORY = os.path.join('..', 'transformations')
 
 def parseConfigurationLine(line, lineNumber):
@@ -92,21 +93,36 @@ def getConfiguration():
 
     return modules, procedure
 
+def writeTransformationDataDirectory(transformationName, transformationDataDirectory):
+    transformationDataDirectory.name = transformationName
+    transformationDataDirectory.write(TRANSFORMATION_DATA_DIRECTORY)
+
 def getTransformations(requestedTransformationNames, installationDirectoryRoot):
     transformations = {}
-    projectDirectory = os.getcwd()
+
+    if not os.path.isdir(TRANSFORMATION_DATA_DIRECTORY):
+        os.mkdir(TRANSFORMATION_DATA_DIRECTORY)
+        if os.name == 'nt':
+            ctypes.windll.kernel32.SetFileAttributesW(TRANSFORMATION_DATA_DIRECTORY, 2)
 
     configurationDirectory = VirtualDirectory(CONFIGURATION_DIRECTORY, '.')
-    transformationsDirectory = os.path.join(installationDirectoryRoot, TRANSFORMATIONS_DIRECTORY)
+    transformationsDirectoryPath = os.path.join(installationDirectoryRoot, TRANSFORMATIONS_DIRECTORY)
+    
     for transformationName in requestedTransformationNames.keys():
-        if os.path.isdir(os.path.join(transformationsDirectory, transformationName)):
+        if os.path.isdir(os.path.join(transformationsDirectoryPath, transformationName)):
             sys.stdout.write('\t' + transformationName + '...\n')
             sys.stdout.flush()
+
+            transformationDataDirectory = None
+            if os.path.isdir(os.path.join(TRANSFORMATION_DATA_DIRECTORY, transformationName)):
+                transformationDataDirectory = VirtualDirectory(transformationName, TRANSFORMATION_DATA_DIRECTORY)
+            else:
+                transformationDataDirectory = VirtualDirectory(transformationName)
             
-            sys.path.append(os.path.join(transformationsDirectory, transformationName))
-            mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectory, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
-            sys.path.remove(os.path.join(transformationsDirectory, transformationName))
-            transformations[transformationName] = mainTransformationPythonModule.Main(configurationDirectory)
+            sys.path.append(os.path.join(transformationsDirectoryPath, transformationName))
+            mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
+            sys.path.remove(os.path.join(transformationsDirectoryPath, transformationName))
+            transformations[transformationName] = mainTransformationPythonModule.Main(copy.copy(configurationDirectory), transformationDataDirectory, lambda d: writeTransformationDataDirectory(transformationName, d))
         else:
             raise UnknownTransformationException('[' + CONFIGURATION_FILE_NAME + ':' + str(requestedTransformationNames[transformationName]) + ']: Unknown transformation: ' + transformationName)
 
@@ -143,10 +159,13 @@ def main(projectDirectory):
 
         transformations[step.transformationName].apply([module.getAsParameter() for module in modules if module.name in step.moduleNames])
 
+    sys.stdout.write('Writing...\n')
     for module in modules:
-        sys.stdout.write('Writing ' + module.name + '...\n')
+        sys.stdout.write('\t' + module.name + '...\n')
         sys.stdout.flush()
         module.export()
+
+    sys.stdout.write('Done\n')
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:

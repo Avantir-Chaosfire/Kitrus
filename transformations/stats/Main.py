@@ -1,7 +1,7 @@
 from KitrusRoot_Transformation import *
 
 class Main(Transformation):
-    def __init__(self, configurationDirectory):
+    def __init__(self, configurationDirectory, transformationDataDirectory, saveData):
         self.fileTypeCounts = {}
         self.totalCommandCount = 0
 

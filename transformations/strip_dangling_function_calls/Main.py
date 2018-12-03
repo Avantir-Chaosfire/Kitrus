@@ -10,7 +10,7 @@ from ConfigurationParsingException import *
 #associated with a module, instead of just the current module. That may not be something people want
 #to do, so probably add a parameter for that in the configuration.
 class Main(Transformation):
-    def __init__(self, configurationDirectory):
+    def __init__(self, configurationDirectory, transformationDataDirectory, saveData):
         self.MINECRAFT_FUNCTION_COMMAND = 'function'
         self.MINECRAFT_NAMESPACE_PATH_SEPARATOR = ':'
         self.MINECRAFT_FUNCTION_PATH_SEPARATOR = '/'

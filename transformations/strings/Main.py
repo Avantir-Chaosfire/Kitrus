@@ -7,7 +7,7 @@ from Object import *
 from UnescapeFunctions import *
 
 class Main(Transformation):
-    def __init__(self, configurationDirectory):
+    def __init__(self, configurationDirectory, transformationDataDirectory, saveData):
         self.OBJECT_FILE_EXTENSION = '.odefs'
         self.CLASS_KEYWORD = 'class'
         self.CLASS_LINE_METACHARACTER = '#'
