@@ -5,10 +5,6 @@ from KitrusRoot_VirtualDirectory import *
 
 from ConfigurationParsingException import *
 
-#TODO: This could be made better by documenting all functions from all modules that use this
-#transformation and then using that to strip dangling function calls as long as the namespace is
-#associated with a module, instead of just the current module. That may not be something people want
-#to do, so probably add a parameter for that in the configuration.
 class Main(Transformation):
     def __init__(self, configurationDirectory, transformationDataDirectory, saveData):
         self.MINECRAFT_FUNCTION_COMMAND = 'function'

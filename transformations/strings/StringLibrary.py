@@ -4,16 +4,6 @@ from StringSet import *
 from StringParsingException import *
 from UnescapeFunctions import *
 
-#TODO: It would be handy to add dictionaries, where the string key indicates which dictionary you're
-#referring to and then takes an additional parameter for the dictionary's key. Perhaps allow the
-#dictionary's key to be defined by a string? The idea of this would be to make object strings more
-#consistent, less error-prone and less wordy. One possibility is to make every string set by nature
-#a dictionary, but I don't know about that as it could restrict people's freedom in how they
-#structure their string files.
-#TODO: One thing that comes up a lot is having sequences of strings with incremental numbers. It
-#also comes up often enough where you want patterns of non-sequential numbers in strings. Having
-#the ability to define strings as the result of mathematical expressions based on other strings
-#would be very useful.
 class StringLibrary:
     def __init__(self, configurationDirectory):
         self.TRANSFORMATION_NAME = 'strings'
