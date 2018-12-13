@@ -10,7 +10,7 @@ class Transformation:
             sys.stdout.write('\t\t' + message + '\n')
 
     def outputWarnings(self, warning):
-        if initialized:
+        if Transformation.initialized:
             sys.stdout.write('\tWARNING: ' + warning + '\n')
         else:
             sys.stdout.write('\t\tWARNING: ' + warning + '\n')

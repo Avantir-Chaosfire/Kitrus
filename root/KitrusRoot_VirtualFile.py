@@ -3,10 +3,13 @@ import os, codecs
 from KitrusRoot_DuplicateFileException import *
 
 class VirtualFile:
-    def __init__(self, name, directory = ''):
+    def __init__(self, name, directory = None):
         self.name = name
-        with codecs.open(os.path.join(directory, self.name), encoding = 'utf-8') as file:
-            self.contents = file.read()
+        if directory == None:
+            self.contents = ''
+        else:
+            with codecs.open(os.path.join(directory, self.name), encoding = 'utf-8') as file:
+                self.contents = file.read()
 
     def write(self, directory):
         filepath = os.path.join(directory, self.name)

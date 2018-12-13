@@ -122,7 +122,10 @@ class StringLibrary:
         raise e
 
     def raiseExportWarning(self, fileName, lineNumber, message):
-        self.warnings.append('\t[' + fileName + ':' + str(lineNumber) + ']: ' + message)
+        if lineNumber > -1:
+            self.warnings.append('[' + fileName + ':' + str(lineNumber) + ']: ' + message)
+        else:
+            self.warnings.append('[' + fileName + ']: ' + message)
 
     def size(self):
         size = 0

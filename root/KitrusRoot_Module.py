@@ -1,7 +1,6 @@
 import os, shutil
 
 from KitrusRoot_VirtualDirectory import *
-from KitrusRoot_VirtualFile import *
 from KitrusRoot_ParameterModule import *
 
 class Module:
