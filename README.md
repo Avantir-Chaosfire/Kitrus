@@ -39,7 +39,7 @@ If you already have a project and want to quickly start using it with Kitrus and
 
 #### Windows
 
-Open the script named "export.bat" with a basic text editor (e.g. Wordpad). The file will look like this:
+Open the script named "export.bat" with a basic text editor (e.g. Notepad - See below). The file will look like this:
 ```
 @ECHO OFF
 
@@ -134,6 +134,10 @@ Examples of things I've used Kitrus for to make data pack development easier:
 3. Store significant coordinates as strings. If ever I want to change the location of something that matters to functions, one change in the strings changes all of the functions too.
 4. Store item name objects, attribute modifiers, villager tags and common entity tags (Among other things) as strings, so that they can be used in multiple places to dramatically reduce the amount of typing I have to do and the complexity of the commands I read.
 5. Removed nearly duplicate commands in give functions, custom item, enemy, spellcasting, weapon and enemy ai systems by putting them in classes. This is where all those files and commands I saved come from.
+
+## Plain Text Files and the Dangers of Notepad and Wordpad
+
+When editing plain text files (e.g. .mcfunction, .str and the Kitrusfile), you want to be able to guarantee that what you see is what gets saved and what will get read. Notepad has a nasty habit of violating this in two different circumstances: Firstly, it will not understand Unix-style line endings (i.e. \n), and it will occasionally choose to hide characters it doesn't understand (Like \n), resulting in the contents of the file potentially being very different from what Notepad shows you. Wordpad will correctly parse Unix-style line endings, but it defaults to opening plain text files in UTF-16 instead of UTF-8. It can also choose to insert characters that you don't want. So if you're working on Windows, preferably don't use either. Not sure what to use, as I primarily use Unix, but I would guess Notepad++ or a third party program like gedit should work.
 
 ## Full Installation, Usage Instructions and Documentation on Developing Transformations
 
