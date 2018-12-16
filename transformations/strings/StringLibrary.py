@@ -51,7 +51,7 @@ class StringLibrary:
         return stringFiles
 
     def parseStringFile(self, virtualFile):
-        lines = virtualFile.contents.split('\n')
+        lines = virtualFile.getContentsLines()
 
         setName = virtualFile.name
         self.stringSets[setName] = StringSet(setName)

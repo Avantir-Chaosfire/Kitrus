@@ -51,7 +51,7 @@ class Main(Transformation):
                 newDirectoryFileChildren.remove(virtualFile)
                 
                 virtualFile.contents = self.replaceStringKeys(virtualFile, kind, path)
-                virtualObjectFileLines = virtualFile.contents.split('\n')
+                virtualObjectFileLines = virtualFile.getContentsLines()
                 
                 priority = 0
                 if len(virtualObjectFileLines) > 0 and virtualObjectFileLines[0].startswith(self.CLASS_LINE_METACHARACTER + self.PRIORITY_KEYWORD + ' '):
@@ -115,7 +115,7 @@ class Main(Transformation):
                 #line class
                 else:
                     classLineEstablisher = self.CLASS_LINE_METACHARACTER + classKeyword + ' '
-                    virtualClassFileLines = virtualClassFile.contents.split('\n')
+                    virtualClassFileLines = virtualClassFile.getContentsLines()
                     virtualClassFileLines = [line + '\n' for line in virtualClassFileLines]
 
                     virtualClassFile.contents = ''

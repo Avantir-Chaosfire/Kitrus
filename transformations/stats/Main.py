@@ -34,7 +34,7 @@ class Main(Transformation):
 
         if fileExtension == 'mcfunction':
             commandCount = 0
-            lines = virtualFile.contents.split('\n')
+            lines = virtualFile.getContentsLines()
 
             for line in lines:
                 if not line == '' and not line[0] == '#' and not line.isspace():

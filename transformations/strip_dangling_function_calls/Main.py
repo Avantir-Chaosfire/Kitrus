@@ -23,7 +23,7 @@ class Main(Transformation):
         lines = []
         for virtualFile in namespaceConfigurationDirectory.fileChildren:
             if virtualFile.name == self.NAMESPACE_CONFIGURATION_FILE_NAME:
-                lines = virtualFile.contents.split('\n')
+                lines = virtualFile.getContentsLines()
                 break
 
         self.moduleNamespaces = {}
@@ -63,7 +63,7 @@ class Main(Transformation):
             self.stripFromDirectory(virtualChildDirectory, functionNames, functionIdentifier)
 
     def stripFromFile(self, virtualFile, functionNames, functionIdentifier):
-        lines = virtualFile.contents.split('\n')
+        lines = virtualFile.getContentsLines()
         newLines = []
 
         for line in lines:
@@ -78,4 +78,4 @@ class Main(Transformation):
             if addLine:
                 newLines.append(line)
 
-        virtualFile.contents = '\n'.join(newLines)
+        virtualFile.setContentsLines(newLines)
