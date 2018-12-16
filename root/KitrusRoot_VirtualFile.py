@@ -10,8 +10,12 @@ class VirtualFile:
         if directory == None:
             self.contents = ''
         else:
-            with codecs.open(os.path.join(directory, self.name), encoding = 'utf-8') as file:
-                self.contents = file.read()
+            try:
+                with codecs.open(os.path.join(directory, self.name), encoding = 'utf-8') as file:
+                    self.contents = file.read()
+            except UnicodeDecodeError as e:
+                e.reason += ', in file ' + self.name
+                raise e
 
     def write(self, directory):
         filepath = os.path.join(directory, self.name)

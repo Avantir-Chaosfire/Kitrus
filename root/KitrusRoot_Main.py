@@ -1,6 +1,6 @@
 #!python3
 
-import sys, os, imp, copy
+import sys, os, imp, copy, ctypes
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_Module import *
