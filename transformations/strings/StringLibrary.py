@@ -77,6 +77,9 @@ class StringLibrary:
                         else:
                             raise StringParsingException(setName, lineNumber, 'Cyclic dependency found; Cannot be resolved.')
 
+                    if dependency not in self.stringSets.keys():
+                        raise StringParsingException(setName, lineNumber, 'Unknown string set: ' + str(dependency))
+
                     for kind in self.stringSets[dependency].kinds:
                         if kind not in self.stringSets[setName].kinds:
                             self.stringSets[setName].kinds.append(kind)
