@@ -1,29 +1,23 @@
+from FunctionEncrypter import *
+
 def ParsingData:
     def __init__(self, namespaces):
-        functionRegularExpression = '(' + '|'.join(namespaces) + '):([' + re.escape(self.functions.validCharacters) + ']+)'
-        tagRegularExpression = '([' + re.escape(self.tags.validCharacters) + ']+)'
-        objectiveRegularExpression = '([' + re.escape(self.objectives.validCharacters) + ']+)'
-        selectorRegularExpression = '@[aeprs](\[(.+=.+)*\])?'
-        numericalRegularExpression = '[0123456789]+(\.[0123456789]+)?'
-        vectorRegularExpression = numericalRegularExpression + ' ' + numericalRegularExpression + ' ' + numericalRegularExpression
-        improperJSONObjectRegularExpression = '{([^ ]+:.+)*}'
-        properJSONObjectRegularExpression = '{("[^ ]+":.+)*}'
-        itemRegularExpression = '[^ ]+' + improperJSONObjectRegularExpression
+        generalRegularExpressions = {}
         
-        self.functions = TermParsingData()
-        self.functions.validCharacters = string.digits + string.ascii_lowercase + '-_'
-        self.functions.commands = [
-            'execute',
-            'function',
-            'schedule'
-        ]
-        functionsAdvanceRegularExpressions = [
-            'function'
-        ]
-        for re in functionsAdvanceRegularExpressions:
-            self.functions.templates.append(ParsingTemplate(re, functionRegularExpression))
+        generalRegularExpressions['function'] = '(' + '|'.join(namespaces) + '):([' + re.escape(self.functions.validCharacters) + ']+)'
+        generalRegularExpressions['tag'] = '([' + re.escape(self.tags.validCharacters) + ']+)'
+        generalRegularExpressions['objective'] = '([' + re.escape(self.objectives.validCharacters) + ']+)'
+        generalRegularExpressions['selector'] = '@[aeprs](\[(.+=.+)*\])?'
+        generalRegularExpressions['numerical'] = '[0123456789]+(\.[0123456789]+)?'
+        generalRegularExpressions['vector'] = numericalRegularExpression + ' ' + numericalRegularExpression + ' ' + numericalRegularExpression
+        generalRegularExpressions['improperJSONObject'] = '{([^ ]+:.+)*}'
+        generalRegularExpressions['properJSONObject'] = '{("[^ ]+":.+)*}'
+        generalRegularExpressions['item'] = '[^ ]+' + improperJSONObjectRegularExpression
 
-        self.tags = TermParsingData()
+        self.functionEncrypter = FunctionEncrypter(generalRegularExpressions)
+    
+        #Tags
+        self.tags = Term()
         self.tags.validcharacters = string.digits + string.ascii_letters + '-_+.'
         self.tags.commands = [
             'execute',
@@ -35,7 +29,8 @@ def ParsingData:
         for re in tagsAdvanceRegularExpressions:
             self.tags.templates.append(ParsingTemplate(re, tagRegularExpression))
 
-        self.objectives = TermParsingData()
+        #Objectives
+        self.objectives = Term()
         self.objectives.validCharacters = string.digits + string.ascii_letters + '-_+.'
         self.objectives.commands = [
             'execute',
@@ -54,6 +49,7 @@ def ParsingData:
         for re in objectivesAdvanceRegularExpressions:
             self.objectives.templates.append(ParsingTemplate(re, objectiveRegularExpression))
 
+        #Selectors
         self.selectors = TermParsingData()
         self.selectors.commands = [
             'advancement',
@@ -116,6 +112,7 @@ def ParsingData:
         for re in selectorsAdvanceRegularExpressions:
             self.selectors.templates.append(ParsingTemplate(re, selectorRegularExpression))
 
+        #Improper JSON Objects (Entities)
         self.improperJSONObjects = TermParsingData()
         self.improperJSONObjects.commands = [
             'data',
@@ -128,6 +125,7 @@ def ParsingData:
         for re in improperJSONObjectsAdvanceRegularExpressions:
             self.improperJSONObjects.templates.append(ParsingTemplate(re, improperJSONObjectRegularExpression))
 
+        #Proper JSON Objects (Raw JSON Text)
         self.properJSONObjects = TermParsingData()
         self.properJSONObjects.commands = [
             'tellraw',
@@ -140,6 +138,7 @@ def ParsingData:
         for re in properJSONObjectsAdvanceRegularExpressions:
             self.properJSONObjects.templates.append(ParsingTemplate(re, properJSONObjectRegularExpression))
 
+        #Items
         self.items = TermParsingData()
         self.items.commands = [
             'clear',
