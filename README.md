@@ -151,7 +151,7 @@ If you want to contribute, message me on on reddit (/u/Avantir), and be sure to 
 
 MIT License
 
-Copyright (c) [year] [fullname]
+Copyright (c) 2018 Avantir Chaosfire Mardrak Yihn
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
