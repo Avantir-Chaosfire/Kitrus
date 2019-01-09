@@ -18,13 +18,13 @@ class VirtualFile:
                 raise e
 
     def write(self, directory):
-        filepath = os.path.join(directory, self.name)
+        filePath = os.path.join(directory, self.name)
         
-        if not os.path.isfile(filepath):
-            with codecs.open(filepath, encoding = 'utf-8', mode = 'w') as file:
+        if not os.path.isfile(filePath):
+            with codecs.open(filePath, encoding = 'utf-8', mode = 'w') as file:
                 file.write(self.contents)
         else:
-            raise DuplicateFileException('A transformation duplicated a file. Unable to complete export.')
+            raise DuplicateFileException('A transformation duplicated a file "' + filePath + '". Unable to complete export.')
 
     def getLineEndings(self):
         return VirtualFile.DOS_LINE_ENDINGS if VirtualFile.DOS_LINE_ENDINGS in self.contents else VirtualFile.UNIX_LINE_ENDINGS

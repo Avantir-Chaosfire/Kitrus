@@ -282,20 +282,11 @@ class StringLibrary:
             lineNumber = self.getLineNumber(contents, keyStartIndex)
 
             if not key.startswith('\\'): #Key is not escaped
-                if len(arguments) == 1:
-                    if key in stringKeys:
-                        value = self.getValue(key, kind)
-                        contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
-                    else:
-                        errorFunction(lineNumber, 'Unknown string key "' + key + '"')
-                elif len(arguments) > 1:
-                    if arguments[0] in stringKeys:
-                        value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
-                        contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
-                    else:
-                        errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
+                if arguments[0] in stringKeys:
+                    value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
+                    contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                 else:
-                    raise Exception('Unknown error: No string keys found')
+                    errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
             else: #Key is escaped, remove escape
                 key = key[1:]
                 if len(key) == 0:
@@ -312,8 +303,8 @@ class StringLibrary:
             
         value = self.getValue(arguments[0], kind)
 
-        i = 1
-        while i < len(arguments) and self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value:
+        i = 0
+        while i < len(arguments) and (i == 0 or self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value):
             value = value.replace(self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER, arguments[i])
             i += 1
 
