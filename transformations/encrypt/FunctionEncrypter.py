@@ -1,21 +1,10 @@
 from BaseEncrypter import *
-from ParsingData import *
 
 def FunctionEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions):
-        super(FunctionEncrypter, self).__init__()
+    def __init__(self, generalRegularExpressions, encryptedTerms):
+        self.commands = []
 
-        self.validCharacters = string.digits + string.ascii_lowercase + '-_'
-        self.commands = [
-            'execute',
-            'function',
-            'schedule'
-        ]
-        advanceRegularExpressions = [
-            'function'
-        ]
-
-        super.createTemplates(advanceRegularExpressions, generalRegularExpressions['function'])
+        super(FunctionEncrypter, self).__init__(encryptedTerms, [], '')
 
     def encryptTerm(self, term):
-        pass
+        return super.encryptBaseTerm(term, 'function')
