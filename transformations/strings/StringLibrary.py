@@ -304,15 +304,9 @@ class StringLibrary:
         value = self.getValue(arguments[0], kind)
 
         i = 0
-        while i < len(arguments) and (i == 0 or self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value):
+        while i < len(arguments):
             value = value.replace(self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER, arguments[i])
             i += 1
-
-        if i < len(arguments):
-            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": ' + self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER)
-            
-        if self.containsParameter(value):
-            errorFunction(lineNumber, 'Extra parameter present in string "' + arguments[0] + '"')
 
         value = unescapeSymbols(value, ESCAPED_PARAMETER_PATTERN)
 
