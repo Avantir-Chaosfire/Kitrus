@@ -1,12 +1,10 @@
 from Template import *
 
 def BaseEncrypter:
-    def __init__(self):
-        self.validCharacters = ''
-        self.commands = []
+    def __init__(self, encryptedTerms, advanceRegularExpressions, targetRegularExpression):
         self.templates = []
+        self.encryptedTerms = encryptedTerms
 
-    def createTemplates(self, advanceRegularExpressions, targetRegularExpression)
         for regularExpression in advanceRegularExpressions:
             self.templates.append(Template(regularExpression, targetRegularExpression))
 
@@ -29,5 +27,13 @@ def BaseEncrypter:
 
         return '\n'.join(newCommands)
 
-    def encryptTerm(self):
+    def encryptTerm(self, term):
         raise NotImplementedError()
+
+    def encryptBaseTerm(self, term, kind):
+        if term not in self.encryptedTerms[kind].values:
+            self.encryptedTerms[kind].values[term] = self.generateUniqueName(kind)
+        return self.encryptedTerms[kind].values[term]
+
+    def generateUniqueName(self, kind):
+        return ''.join(secrets.choice(self.validCharacters[kind]) for _ in range(self.encryptedTermLengths[kind])) #Possible to gunarantee these will be unique? or at least figure out the chance of a duplicate?
