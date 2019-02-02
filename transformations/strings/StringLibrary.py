@@ -344,10 +344,13 @@ class StringLibrary:
                         valueLength = len(value)
                     else:
                         errorFunction(lineNumber, 'Unknown string key "' + variableStack[0] + '"')
+                        valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                 elif not variableStack:
                     errorFunction(lineNumber, 'No expression result.')
+                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                 else:
                     errorFunction(lineNumber, 'Too many expression results.')
+                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                     
             else:
                 contents, valueLength = self.replaceStringKey(contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName)
@@ -369,6 +372,7 @@ class StringLibrary:
                     valueLength = len(value)
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + key + '"')
+                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
             elif len(arguments) > 1:
                 if arguments[0] in stringKeys:
                     value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
@@ -376,6 +380,7 @@ class StringLibrary:
                     valueLength = len(value)
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
+                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
             else:
                 raise Exception('Unknown error: No string keys found')
         else: #Key is escaped, remove escape
