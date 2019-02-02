@@ -14,9 +14,17 @@ class StringLibrary:
         self.PREDEFINED_KEY_METACHARACTER = '#'
         self.PARAMETER_METACHARACTER = '#'
         self.STRING_KEY_METACHARACTER = '##'
-        self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$']
+        self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$', '!', '=', '+', '-', '*', '/', '%', ' ', '\t', '\n']
         self.KITRUS_STRING_DIRECTORY_SEPARATOR = '/'
         self.MINECRAFT_FUNCTION_DIRECTORY_SEPARATOR = '/'
+
+        self.EXPRESSION_OPERATORS = {
+            '+': lambda x, y: x + y,
+            '-': lambda x, y: x - y,
+            '*': lambda x, y: x * y,
+            '/': lambda x, y: x / y,
+            '%': lambda x, y: x % y
+        }
         
         self.complete = False
         self.warnings = []
@@ -246,6 +254,22 @@ class StringLibrary:
             
         return value
 
+    def setValue(self, key, kind, value):
+        foundInSet = ''
+        
+        for stringSet in self.stringSets.values():
+            if key in stringSet.strings.keys():
+                if foundInSet == '':
+                    joinString = ''
+                    if kind in stringSet.strings[key].keys():
+                        stringSet.strings[key][kind] = value
+                    else:
+                        stringSet.strings[key][''] = value
+
+                    foundInSet = stringSet.name
+                else:
+                    self.raiseExportWarning(stringSet.name, -1, 'Duplicate string key "' + key + '" also defined in ' + foundInSet)
+
     def escape(self, string):
         string = string.replace('\\', '\\\\')
         string = string.replace('"', '\\"')
@@ -264,49 +288,133 @@ class StringLibrary:
         else:
             stringKeys = self.stringKeysOf(stringSetName)
         
-        endIndex = len(contents)
+        currentIndex = 0
 
         while True:
-            keyEndIndex = contents.rfind(self.STRING_KEY_METACHARACTER, 0, endIndex)
+            keyStartIndex = contents.find(self.STRING_KEY_METACHARACTER, currentIndex)
+            if keyStartIndex == -1:
+                break
+            
+            keyEndIndex = contents.find(self.STRING_KEY_METACHARACTER, keyStartIndex + 2)
             if keyEndIndex == -1:
                 break
             keyEndIndex += 2
             
-            keyStartIndex = contents.rfind(self.STRING_KEY_METACHARACTER, 0, keyEndIndex - 2)
-            if keyStartIndex == -1:
-                break
             key = contents[keyStartIndex + 2:keyEndIndex - 2]
-
-            arguments = key.split(TEMPLATE_ARGUMENT_SEPARATION_METACHARACTER)
 
             lineNumber = self.getLineNumber(contents, keyStartIndex)
 
-            if not key.startswith('\\'): #Key is not escaped
+            valueLength = 0
+
+            if key.startswith('!'):
+                operators = key[1:].split(' ')
+
+                variableStack = []
+
+                for operator in operators:
+                    if operator in self.EXPRESSION_OPERATORS:
+                        if len(variableStack) < 2:
+                            errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
+                        else:
+                            argument1String = variableStack.pop()
+                            argument2String = variableStack.pop()
+
+                            argument1 = self.parseStringOperator(path, stringKeys, argument1String, kind, errorFunction, lineNumber, stringSetName)
+                            argument2 = self.parseStringOperator(path, stringKeys, argument2String, kind, errorFunction, lineNumber, stringSetName)
+
+                            if None not in [argument1, argument2]:
+                                variableStack.append(self.EXPRESSION_OPERATORS[operator](argument2, argument1))
+                    elif operator == '=':
+                        if len(variableStack) < 2:
+                            errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
+                        else:
+                            stringValueString = variableStack.pop()
+                            stringValue = self.parseStringOperator(path, stringKeys, stringValueString, kind, errorFunction, lineNumber, stringSetName)
+                            stringKeyName = variableStack.pop()
+                            if not stringValue == None:
+                                self.setValue(stringKeyName, kind, str(stringValue))
+                            variableStack.append(stringValue)
+                    else:
+                        variableStack.append(operator)
+                if len(variableStack) == 1:
+                    stringValue = self.parseStringOperator(path, stringKeys, variableStack[0], kind, errorFunction, lineNumber, stringSetName)
+                    if not stringValue == None:
+                        value = '{0:g}'.format(stringValue)
+                        contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
+                        valueLength = len(value)
+                    else:
+                        errorFunction(lineNumber, 'Unknown string key "' + variableStack[0] + '"')
+                elif not variableStack:
+                    errorFunction(lineNumber, 'No expression result.')
+                else:
+                    errorFunction(lineNumber, 'Too many expression results.')
+                    
+            else:
+                contents, valueLength = self.replaceStringKey(contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName)
+
+            currentIndex = keyStartIndex + valueLength
+
+        return contents
+
+    def replaceStringKey(self, contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName):
+        arguments = key.split(TEMPLATE_ARGUMENT_SEPARATION_METACHARACTER)
+
+        valueLength = 0
+
+        if not key.startswith('\\'): #Key is not escaped
+            if len(arguments) == 1:
+                if key in stringKeys:
+                    value = self.getValue(key, kind)
+                    contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
+                    valueLength = len(value)
+                else:
+                    errorFunction(lineNumber, 'Unknown string key "' + key + '"')
+            elif len(arguments) > 1:
                 if arguments[0] in stringKeys:
                     value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
                     contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
+                    valueLength = len(value)
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
-            else: #Key is escaped, remove escape
-                key = key[1:]
-                if len(key) == 0:
-                    contents = contents[:keyStartIndex] + self.STRING_KEY_METACHARACTER + contents[keyEndIndex:]
-                else:
-                    contents = contents[:keyStartIndex + 2] + key + contents[keyEndIndex - 2:]
+            else:
+                raise Exception('Unknown error: No string keys found')
+        else: #Key is escaped, remove escape
+            key = key[1:]
+            if len(key) == 0:
+                contents = contents[:keyStartIndex] + self.STRING_KEY_METACHARACTER + contents[keyEndIndex:]
+                valueLength = len(self.STRING_KEY_METACHARACTER)
+            else:
+                contents = contents[:keyStartIndex + 2] + key + contents[keyEndIndex - 2:]
+                valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
 
-            endIndex = keyStartIndex
-            
-        return contents
+        return contents, valueLength
+
+    def parseStringOperator(self, path, stringKeys, operator, kind, errorFunction, lineNumber, stringSetName):
+        try:
+            return float(operator)
+        except ValueError:
+            value, unused = self.replaceStringKey('', 0, 0, path, stringKeys, operator, kind, errorFunction, lineNumber, stringSetName)
+            try:
+                return float(value)
+            except ValueError:
+                errorFunction(lineNumber, '"' + operator + '" does not evaluate to a number.')
+                return None
 
     def replaceParameters(self, path, arguments, kind, lineNumber, errorFunction, stringSetName):
         arguments = unescapeParameterSeparators(arguments)
             
         value = self.getValue(arguments[0], kind)
 
-        i = 0
-        while i < len(arguments):
+        i = 1
+        while i < len(arguments) and self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value:
             value = value.replace(self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER, arguments[i])
             i += 1
+
+        if i < len(arguments):
+            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": ' + self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER)
+            
+        if self.containsParameter(value):
+            errorFunction(lineNumber, 'Extra parameter present in string "' + arguments[0] + '"')
 
         value = unescapeSymbols(value, ESCAPED_PARAMETER_PATTERN)
 
