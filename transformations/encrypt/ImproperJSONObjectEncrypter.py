@@ -1,17 +1,19 @@
 from BaseEncrypter import *
 
 def ImproperJSONObjectEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions, encryptedTerms):
+    def __init__(self):
+        super(ImproperJSONObjectEncrypter, self).__init__()
+        
         self.commands = [
             'data',
             'summon'
         ]
         advanceRegularExpressions = [
-            'data merge entity ' + generalRegularExpressions['selector'],
-            'summon [^ ]+ ' + generalRegularExpressions['vector']
+            'data merge entity ' + super.generalRegularExpressions['selector'],
+            'summon [^ ]+ ' + super.generalRegularExpressions['vector']
         ]
 
-        super(ImproperJSONObjectEncrypter, self).__init__(encryptedTerms, advanceRegularExpressions, generalRegularExpressions['improperJSONObject'])
+        super.createTemplates(advanceRegularExpressions, super.generalRegularExpressions['improperJSONObject'])
 
     def encryptTerm(self, term):
-        pass
+        return super.encryptImproperJSON(term)

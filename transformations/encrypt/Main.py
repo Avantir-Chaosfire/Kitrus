@@ -2,7 +2,7 @@ import secrets, string
 
 from KitrusRoot_Transformation import *
 from NamespaceMappings import *
-from EncryptedTerms import *
+from  import *
 
 #TODO:
 #-Save data
@@ -66,21 +66,6 @@ class Main(Transformation):
                 self.moduleEncryptionConfiguration[moduleName][line[:indexOfEquals]] = line[indexOfEquals + 1:]
                 lineNumber += 1
 
-        numericalRegularExpression = '[0123456789]+(\.[0123456789]+)?'
-        improperJSONObjectRegularExpression = '{([^ ]+:.+)*}'
-
-        generalRegularExpressions = {
-            'function': '(' + '|'.join(self.moduleNamespaces.values()) + '):([' + re.escape(encryptedTerms['function'].validCharacters) + ']+)'
-            'tag': '([' + re.escape(encryptedTerms['tag'].validCharacters) + ']+)'
-            'objective': '([' + re.escape(encryptedTerms['objective'].validCharacters) + ']+)'
-            'selector': '@[aeprs](\[(.+=.+)*\])?'
-            'numerical': numericalRegularExpression
-            'vector': numericalRegularExpression + ' ' + numericalRegularExpression + ' ' + numericalRegularExpression
-            'improperJSONObject': improperJSONObjectRegularExpression
-            'properJSONObject': '{("[^ ]+":.+)*}'
-            'item': '[^ ]+' + improperJSONObjectRegularExpression
-        }
-
         self.namespaceMappings = {}
 
     def apply(self, modules):
@@ -92,23 +77,17 @@ class Main(Transformation):
         ]
 
         for module in modulesToEncryptFileNames:
-            encryptedTerms = {
-                'function': EncryptedTerms(string.digits + string.ascii_lowercase + '-_', 40),
-                'tag': EncryptedTerms(string.digits + string.ascii_letters + '-_+.', 40),
-                'objective': EncryptedTerms(string.digits + string.ascii_letters + '-_+.', 16)
-            }
-            
             fileContentEncrypters = [
-                FunctionCallEncrypter(generalRegularExpressions, encryptedTerms),
-                TagEncrypter(generalRegularExpressions, encryptedTerms),
-                ObjectiveEncrypter(generalRegularExpressions, encryptedTerms),
-                SelectorEncrypter(generalRegularExpressions, encryptedTerms),
-                ImproperJSONObjectEncrypter(generalRegularExpressions, encryptedTerms),
-                ProperJSONObjectEncrypter(generalRegularExpressions, encryptedTerms),
-                ItemEncrypter(generalRegularExpressions, encryptedTerms)
+                FunctionCallEncrypter(),
+                TagEncrypter(),
+                ObjectiveEncrypter(),
+                SelectorEncrypter(),
+                ImproperJSONObjectEncrypter(),
+                ProperJSONObjectEncrypter(),
+                ItemEncrypter()
             ]
 
-            functionNameEncrypter = FunctionEncrypter(generalRegularExpressions, encryptedTerms)
+            functionNameEncrypter = BaseEncrypter()
 
             self.namespaceMappings[module.name] = NamespaceMapping(self.moduleNamespaces[module.name], functionNameEncrypter, fileContentEncrypters)
             self.encryptFunctionNames(module.name, module.rootDirectory)

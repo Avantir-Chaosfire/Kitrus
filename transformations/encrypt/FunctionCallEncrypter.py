@@ -1,7 +1,9 @@
 from BaseEncrypter import *
 
 def FunctionCallEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions, encryptedTerms):
+    def __init__(self):
+        super(FunctionCallEncrypter, self).__init__()
+        
         self.commands = [
             'execute',
             'function',
@@ -11,7 +13,7 @@ def FunctionCallEncrypter(BaseEncrypter):
             'function'
         ]
 
-        super(FunctionCallEncrypter, self).__init__(encryptedTerms, advanceRegularExpressions, generalRegularExpressions['function'])
+        super.createTemplates(advanceRegularExpressions, generalRegularExpressions['function'])
 
     def encryptTerm(self, term):
         [namespace, functionName] = term.split(':')

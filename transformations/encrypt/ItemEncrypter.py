@@ -1,7 +1,9 @@
 from BaseEncrypter import *
 
 def ItemEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions, encryptedTerms):
+    def __init__(self):
+        super(ItemEncrypter, self).__init__()
+        
         self.commands = [
             'clear',
             'clone',
@@ -14,20 +16,20 @@ def ItemEncrypter(BaseEncrypter):
             'setblock'
         ]
         advanceRegularExpressions = [
-            'clear ' + generalRegularExpressions['selector'],
-            'clone ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['vector'] + ' (filtered|masked|replace) (force|move|normal)',
-            'data merge block ' + generalRegularExpressions['vector'],
-            '(if|unless) block ' + generalRegularExpressions['vector'],
-            'fill ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['vector'],
+            'clear ' + super.generalRegularExpressions['selector'],
+            'clone ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + ' (filtered|masked|replace) (force|move|normal)',
+            'data merge block ' + super.generalRegularExpressions['vector'],
+            '(if|unless) block ' + super.generalRegularExpressions['vector'],
+            'fill ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'],
             'replace',
-            'give ' + generalRegularExpressions['selector'],
-            'replaceitem block ' + generalRegularExpressions['vector'] + ' [^ ]+ ',
-            'replaceitem entity ' + generalRegularExpressions['selector'] + ' [^ ]+ ',
+            'give ' + super.generalRegularExpressions['selector'],
+            'replaceitem block ' + super.generalRegularExpressions['vector'] + ' [^ ]+ ',
+            'replaceitem entity ' + super.generalRegularExpressions['selector'] + ' [^ ]+ ',
             'particle (minecraft:)(item|block)',
-            'setblock ' + generalRegularExpressions['vector']
+            'setblock ' + super.generalRegularExpressions['vector']
         ]
 
-        super(ItemEncrypter, self).__init__(encryptedTerms, advanceRegularExpressions, generalRegularExpressions['item'])
+        super.createTemplates(advanceRegularExpressions, super.generalRegularExpressions['item'])
 
     def encryptTerm(self, term):
-        pass
+        super.encryptItem(term)
