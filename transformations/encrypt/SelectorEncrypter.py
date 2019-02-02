@@ -1,7 +1,9 @@
 from BaseEncrypter import *
 
 def SelectorEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions, encryptedTerms):
+    def __init__(self):
+        super(SelectorEncrypter, self).__init__()
+        
         self.commands = [
             'advancement',
             'bossbar',
@@ -50,18 +52,18 @@ def SelectorEncrypter(BaseEncrypter):
             'gamemode (survival|creative|adventure|spectator)',
             'loot replace entity',
             'loot give',
-            'particle [^ ]+(((block|falling_dust|item) [^ ]+)|(dust ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['vector'] + '))? ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['numerical'] + ' ' + generalRegularExpressions['numerical'] + ' (normal|force)',
+            'particle [^ ]+(((block|falling_dust|item) [^ ]+)|(dust ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + '))? ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['numerical'] + ' ' + super.generalRegularExpressions['numerical'] + ' (normal|force)',
             'playsound [^ ]+ (master|music|record|weather|block|hostile|neutral|player|ambient|voice)',
             'recipe (give|take)',
             'replaceitem entity',
             'say .*',
             'scoreboard players (list|get|set|add|remove|reset|enable|operation)',
-            'spreadplayers ' + generalRegularExpressions['vector'] + ' ' + generalRegularExpressions['numerical'] + ' (true|false)',
+            'spreadplayers ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['numerical'] + ' (true|false)',
             'team join [^ ]+',
             'team leave'
         ]
 
-        super(SelectorEncrypter, self).__init__(encryptedTerms, advanceRegularExpressions, generalRegularExpressions['selector'])
+        super.createTemplates(advanceRegularExpressions, super.generalRegularExpressions['selector'])
 
     def encryptTerm(self, term):
-        pass
+        super.encryptSelector(term)

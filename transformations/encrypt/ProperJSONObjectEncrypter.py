@@ -1,17 +1,21 @@
+import json
+
 from BaseEncrypter import *
 
 def ProperJSONObjectEncrypter(BaseEncrypter):
-    def __init__(self, generalRegularExpressions, encryptedTerms):
+    def __init__(self):
+        super(ProperJSONObjectEncrypter, self).__init__()
+        
         self.commands = [
             'tellraw',
             'title'
         ]
         advanceRegularExpressions = [
-            'tellraw ' + generalRegularExpressions['selector'],
-            'title ' + generalRegularExpressions['selector'] + ' (title|subtitle|actionbar)'
+            'tellraw ' + super.generalRegularExpressions['selector'],
+            'title ' + super.generalRegularExpressions['selector'] + ' (title|subtitle|actionbar)'
         ]
 
-        super(ProperJSONObjectEncrypter, self).__init__(encryptedTerms, advanceRegularExpressions, generalRegularExpressions['properJSONObject'])
+        super.createTemplates(advanceRegularExpressions, super.generalRegularExpressions['properJSONObject'])
 
     def encryptTerm(self, term):
-        pass
+        return super.encryptProperJSON(term)

@@ -5,7 +5,7 @@ class NamespaceMappings:
         self.fileContentEncrypters = fileContentEncrypters
 
     def getEncryptedFunctionName(self, term):
-        return self.functionNameEncrypter.encryptTerm(term)
+        return self.functionNameEncrypter.encryptBaseTerm(term, 'function')
 
     def getEncryptedFileContents(self, virtualFile):
         for encrypter in self.fileContentEncrypters:
