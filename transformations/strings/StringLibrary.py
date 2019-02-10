@@ -332,7 +332,7 @@ class StringLibrary:
                             stringValue = self.parseStringOperator(path, stringKeys, stringValueString, kind, errorFunction, lineNumber, stringSetName)
                             stringKeyName = variableStack.pop()
                             if not stringValue == None:
-                                self.setValue(stringKeyName, kind, str(stringValue))
+                                self.setValue(stringKeyName, kind, '{0:g}'.format(stringValue))
                             variableStack.append(stringValue)
                     else:
                         variableStack.append(operator)
