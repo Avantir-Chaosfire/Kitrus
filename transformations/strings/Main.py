@@ -107,7 +107,7 @@ class Main(Transformation):
                     classFileNameComponents = virtualClassFile.name.split('.', 1)
                     classFileExtension = '.' + classFileNameComponents[1] if len(classFileNameComponents) > 1 else ''
 
-                    for obj in objects:
+                    for obj in classToExpand.objects:
                         virtualObjectFile = copy.copy(virtualClassFile)
                         virtualObjectFile.name = obj.name + classFileExtension
                         self.replaceObjectKeysInFile(virtualObjectFile, obj.args)
