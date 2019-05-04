@@ -11,9 +11,14 @@ class StringLibrary:
         self.LINE_START_METACHARACTER = '#'
         self.INCLUDE_STATEMENT_KEYWORD = 'include'
         self.JOIN_STATEMENT_KEYWORD = 'join'
-        self.PREDEFINED_KEY_METACHARACTER = '#'
-        self.PARAMETER_METACHARACTER = '#'
-        self.STRING_KEY_METACHARACTER = '##'
+        self.PREDEFINED_KEY_METACHARACTER_START = '<'
+        self.PREDEFINED_KEY_METACHARACTER_END = '>'
+        self.PARAMETER_METACHARACTER_START = '<'
+        self.PARAMETER_METACHARACTER_END = '>'
+        self.STRING_KEY_METACHARACTER_START = '<#'
+        self.STRING_KEY_METACHARACTER_END = '#>'
+        self.STRING_KEY_METACHARACTERS_LENGTH = len(self.STRING_KEY_METACHARACTER_START) + len(self.STRING_KEY_METACHARACTER_END)
+        self.STRING_KEY_COMMON_METACHARACTER = ''.join([c for c in self.STRING_KEY_METACHARACTER_START if c in self.STRING_KEY_METACHARACTER_END])
         self.ILLEGAL_STRING_KEY_CHARACTERS = ['\\', '#', '$', '!', '=', '+', '-', '*', '/', '%', ' ', '\t', '\n']
         self.KITRUS_STRING_DIRECTORY_SEPARATOR = '/'
         self.MINECRAFT_FUNCTION_DIRECTORY_SEPARATOR = '/'
@@ -225,11 +230,11 @@ class StringLibrary:
         endIndex = len(contents)
         
         for (key, value) in self.predefinitions.items():
-            hashKey = self.PREDEFINED_KEY_METACHARACTER + key + self.PREDEFINED_KEY_METACHARACTER
+            hashKey = self.PREDEFINED_KEY_METACHARACTER_START + key + self.PREDEFINED_KEY_METACHARACTER_END
             while hashKey in contents:
                 contents = contents.replace(hashKey, value(path), 1)
 
-        return unescapeSymbols(contents, self.PREDEFINED_KEY_METACHARACTER + '(\\\\)+(' + '|'.join(self.predefinitions.keys()) + ')' + self.PREDEFINED_KEY_METACHARACTER)
+        return unescapeSymbols(contents, self.PREDEFINED_KEY_METACHARACTER_START + '(\\\\)+(' + '|'.join(self.predefinitions.keys()) + ')' + self.PREDEFINED_KEY_METACHARACTER_END)
 
     def getValue(self, key, kind):
         value = ''
@@ -288,24 +293,35 @@ class StringLibrary:
         else:
             stringKeys = self.stringKeysOf(stringSetName)
         
-        currentIndex = 0
-
         while True:
-            keyStartIndex = contents.find(self.STRING_KEY_METACHARACTER, currentIndex)
-            if keyStartIndex == -1:
-                break
-            
-            keyEndIndex = contents.find(self.STRING_KEY_METACHARACTER, keyStartIndex + 2)
+            keyEndIndex = -1
+            keyStartIndex = -1
+
+            currentStartSearchIndex = -1
+            currentEndSearchIndex = 0
+            while True:
+                keyEndIndex = contents.find(self.STRING_KEY_METACHARACTER_END, currentEndSearchIndex)
+                if keyEndIndex == -1:
+                    break
+
+                if currentStartSearchIndex == -1:
+                    currentStartSearchIndex = keyEndIndex
+                
+                keyStartIndex = contents.rfind(self.STRING_KEY_METACHARACTER_START, 0, currentStartSearchIndex)
+                if not keyStartIndex == -1 and not contents[keyStartIndex + 2] == '\\':
+                    break
+
+                currentStartSearchIndex = keyStartIndex
+                currentEndSearchIndex = keyEndIndex + 2
+
             if keyEndIndex == -1:
                 break
-            keyEndIndex += 2
             
+            keyEndIndex += 2
             key = contents[keyStartIndex + 2:keyEndIndex - 2]
 
             lineNumber = self.getLineNumber(contents, keyStartIndex)
-
-            valueLength = 0
-
+            
             if key.startswith('!'):
                 operators = key[1:].split(' ')
 
@@ -341,64 +357,76 @@ class StringLibrary:
                     if not stringValue == None:
                         value = '{0:g}'.format(stringValue)
                         contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
-                        valueLength = len(value)
                     else:
                         errorFunction(lineNumber, 'Unknown string key "' + variableStack[0] + '"')
-                        valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                 elif not variableStack:
                     errorFunction(lineNumber, 'No expression result.')
-                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                 else:
                     errorFunction(lineNumber, 'Too many expression results.')
-                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
                     
             else:
-                contents, valueLength = self.replaceStringKey(contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName)
+                contents = self.replaceStringKey(contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName)
 
-            currentIndex = keyStartIndex + valueLength
+        currentEndSearchIndex = 0
+        while True:
+            keyEndIndex = -1
+            keyStartIndex = -1
+
+            while True:
+                keyEndIndex = contents.find(self.STRING_KEY_METACHARACTER_END, currentEndSearchIndex)
+                if keyEndIndex == -1:
+                    break
+                
+                keyStartIndex = contents.rfind(self.STRING_KEY_METACHARACTER_START, 0, keyEndIndex)
+                if not keyStartIndex == -1 and contents[keyStartIndex + 2] == '\\':
+                    break
+
+                currentEndSearchIndex = keyEndIndex + 2
+
+            if keyEndIndex == -1:
+                break
+            
+            keyEndIndex += 2
+            key = contents[keyStartIndex + 2:keyEndIndex - 2]
+
+            lineNumber = self.getLineNumber(contents, keyStartIndex)
+
+            contents = self.replaceStringKey(contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName)
 
         return contents
 
     def replaceStringKey(self, contents, keyStartIndex, keyEndIndex, path, stringKeys, key, kind, errorFunction, lineNumber, stringSetName):
         arguments = key.split(TEMPLATE_ARGUMENT_SEPARATION_METACHARACTER)
 
-        valueLength = 0
-
         if not key.startswith('\\'): #Key is not escaped
             if len(arguments) == 1:
                 if key in stringKeys:
                     value = self.getValue(key, kind)
                     contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
-                    valueLength = len(value)
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + key + '"')
-                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
             elif len(arguments) > 1:
                 if arguments[0] in stringKeys:
                     value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
                     contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
-                    valueLength = len(value)
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
-                    valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
             else:
                 raise Exception('Unknown error: No string keys found')
         else: #Key is escaped, remove escape
             key = key[1:]
             if len(key) == 0:
-                contents = contents[:keyStartIndex] + self.STRING_KEY_METACHARACTER + contents[keyEndIndex:]
-                valueLength = len(self.STRING_KEY_METACHARACTER)
+                contents = contents[:keyStartIndex] + self.STRING_KEY_COMMON_METACHARACTER + contents[keyEndIndex:]
             else:
                 contents = contents[:keyStartIndex + 2] + key + contents[keyEndIndex - 2:]
-                valueLength = (len(self.STRING_KEY_METACHARACTER) * 2) + len(key)
 
-        return contents, valueLength
+        return contents
 
     def parseStringOperator(self, path, stringKeys, operator, kind, errorFunction, lineNumber, stringSetName):
         try:
             return float(operator)
         except ValueError:
-            value, unused = self.replaceStringKey('', 0, 0, path, stringKeys, operator, kind, errorFunction, lineNumber, stringSetName)
+            value = self.replaceStringKey('', 0, 0, path, stringKeys, operator, kind, errorFunction, lineNumber, stringSetName)
             try:
                 return float(value)
             except ValueError:
@@ -411,12 +439,12 @@ class StringLibrary:
         value = self.getValue(arguments[0], kind)
 
         i = 1
-        while i < len(arguments) and self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER in value:
-            value = value.replace(self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER, arguments[i])
+        while i < len(arguments) and self.PARAMETER_METACHARACTER_START + str(i) + self.PARAMETER_METACHARACTER_END in value:
+            value = value.replace(self.PARAMETER_METACHARACTER_START + str(i) + self.PARAMETER_METACHARACTER_END, arguments[i])
             i += 1
 
         if i < len(arguments):
-            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": ' + self.PARAMETER_METACHARACTER + str(i) + self.PARAMETER_METACHARACTER)
+            errorFunction(lineNumber, 'Missing parameter in string "' + arguments[0] + '": ' + self.PARAMETER_METACHARACTER_START + str(i) + self.PARAMETER_METACHARACTER_END)
             
         if self.containsParameter(value):
             errorFunction(lineNumber, 'Extra parameter present in string "' + arguments[0] + '"')
@@ -426,7 +454,7 @@ class StringLibrary:
         return self.replaceStringKeys(path, value, kind, errorFunction, stringSetName)
 
     def containsParameter(self, contents):
-        return not re.search(self.PARAMETER_METACHARACTER + '(([1-9]([0-9])*)|0)' + self.PARAMETER_METACHARACTER, contents) == None
+        return not re.search(self.PARAMETER_METACHARACTER_START + '(([1-9]([0-9])*)|0)' + self.PARAMETER_METACHARACTER_END, contents) == None
 
     def getWarnings(self):
         tempWarnings = self.warnings

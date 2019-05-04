@@ -12,7 +12,8 @@ class Main(Transformation):
         self.OBJECT_FILE_EXTENSION = '.odefs'
         self.CLASS_KEYWORD = 'class'
         self.CLASS_LINE_METACHARACTER = '#'
-        self.OBJECT_PARAMETER_METACHARACTER = '#'
+        self.OBJECT_PARAMETER_METACHARACTER_START = '<'
+        self.OBJECT_PARAMETER_METACHARACTER_END = '>'
         self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER = '$'
         self.CLASS_OBJECT_ASSOCIATION_METACHARACTER = '$'
         self.CLASS_OBJECT_ASSOCIATION_DEFAULT_NAME = 'objects'
@@ -129,7 +130,7 @@ class Main(Transformation):
                                 
                                 i = 0
                                 while i < len(obj.args):
-                                    objectLine = objectLine.replace(self.OBJECT_PARAMETER_METACHARACTER + str(i) + self.OBJECT_PARAMETER_METACHARACTER, obj.args[i])
+                                    objectLine = objectLine.replace(self.OBJECT_PARAMETER_METACHARACTER_START + str(i) + self.OBJECT_PARAMETER_METACHARACTER_END, obj.args[i])
                                     i += 1
 
                                 line += objectLine
@@ -203,7 +204,7 @@ class Main(Transformation):
     def replaceObjectKeysInFile(self, virtualFile, args):
         i = 0
         while i < len(args):
-            virtualFile.contents = virtualFile.contents.replace(self.OBJECT_PARAMETER_METACHARACTER + str(i) + self.OBJECT_PARAMETER_METACHARACTER, args[i])
+            virtualFile.contents = virtualFile.contents.replace(self.OBJECT_PARAMETER_METACHARACTER_START + str(i) + self.OBJECT_PARAMETER_METACHARACTER_END, args[i])
             i += 1
 
         virtualFile.contents = unescapeSymbols(virtualFile.contents, ESCAPED_PARAMETER_PATTERN)
