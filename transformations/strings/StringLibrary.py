@@ -405,12 +405,14 @@ class StringLibrary:
                     contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + key + '"')
+                    contents = contents[:keyStartIndex] + '[UNKNOWN STRING KEY]' + contents[keyEndIndex:]
             elif len(arguments) > 1:
                 if arguments[0] in stringKeys:
                     value = self.replaceParameters(path, arguments, kind, lineNumber, errorFunction, stringSetName)
                     contents = contents[:keyStartIndex] + value + contents[keyEndIndex:]
                 else:
                     errorFunction(lineNumber, 'Unknown string key "' + arguments[0] + '"')
+                    contents = contents[:keyStartIndex] + '[UNKNOWN STRING KEY]' + contents[keyEndIndex:]
             else:
                 raise Exception('Unknown error: No string keys found')
         else: #Key is escaped, remove escape

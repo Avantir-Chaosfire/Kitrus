@@ -111,8 +111,10 @@ class Main(Transformation):
                     for obj in classToExpand.objects:
                         virtualObjectFile = copy.copy(virtualClassFile)
                         virtualObjectFile.name = obj.name + classFileExtension
-                        self.replaceObjectKeysInFile(virtualObjectFile, obj.args)
-                        newDirectoryFileChildren.append(virtualObjectFile)
+                        if virtualObjectFile.name not in list(map(lambda f: f.name, newDirectoryFileChildren)):
+                            self.replaceObjectKeysInFile(virtualObjectFile, obj.args)
+                            newDirectoryFileChildren.append(virtualObjectFile)
+                        
                 #line class
                 else:
                     classLineEstablisher = self.CLASS_LINE_METACHARACTER + classKeyword + ' '
