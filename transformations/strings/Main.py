@@ -66,7 +66,7 @@ class Main(Transformation):
                         self.strings.raiseExportWarning(os.path.join(path, virtualFile.name), 1, 'Illegal priority value (Must be positive): ' + str(priority))
                         priority = 0
                     
-                objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines if not line == '']
+                objects = [Object(self.parseObject(line)) for line in virtualObjectFileLines if self.lineIsObject(line)]
                 classObjectAssociationName = virtualFile.name[:-len(self.OBJECT_FILE_EXTENSION)]
 
                 classesToExpand.append(Class(objects, priority, classObjectAssociationName))
@@ -179,6 +179,12 @@ class Main(Transformation):
                     break
             if not merge:
                 existingDirectory.directoryChildren.append(transientChildDirectory)
+
+    def lineIsObject(self, line):
+        notEmpty = not line == ''
+        notComment = not line.startswith(self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER)
+
+        return notEmpty and notComment
 
     def parseObject(self, line):
         arguments = line.split(self.OBJECT_ARGUMENT_SEPARATION_METACHARACTER)
