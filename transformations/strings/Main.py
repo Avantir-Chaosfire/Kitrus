@@ -2,7 +2,7 @@ import copy, os
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_VirtualDirectory import *
-from StringLibrary import *
+from StringParser import *
 from Class import *
 from Object import *
 from UnescapeFunctions import *
@@ -26,8 +26,8 @@ class Main(Transformation):
                 stringsConfigurationDirectory = virtualDirectory
                 break
 
-        self.strings = StringLibrary(stringsConfigurationDirectory)
-        self.outputMessage('Strings: ' + str(self.strings.size()))
+        self.strings = StringParser(stringsConfigurationDirectory)
+        self.outputMessage('Strings: ' + str(self.strings.stringLibrary.size()))
 
     def apply(self, modules):
         for module in modules:
@@ -50,7 +50,7 @@ class Main(Transformation):
         for virtualFile in directory.fileChildren:
             if virtualFile.name.endswith(self.OBJECT_FILE_EXTENSION):
                 newDirectoryFileChildren.remove(virtualFile)
-                
+
                 virtualFile.contents = self.replaceStringKeys(virtualFile, kind, path)
                 virtualObjectFileLines = virtualFile.getContentsLines()
                 
