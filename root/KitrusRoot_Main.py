@@ -1,6 +1,7 @@
 #!python3
 
-import sys, os, imp, copy, ctypes
+import importlib.machinery, importlib.util
+import sys, os, copy, ctypes
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_Module import *
@@ -97,6 +98,14 @@ def writeTransformationDataDirectory(transformationName, transformationDataDirec
     transformationDataDirectory.name = transformationName
     transformationDataDirectory.write(TRANSFORMATION_DATA_DIRECTORY)
 
+def getTransformationMainModule(transformationsDirectoryPath, transformationName):
+    #return imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
+    loader = importlib.machinery.SourceFileLoader(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
 def getTransformations(requestedTransformationNames, installationDirectoryRoot):
     transformations = {}
 
@@ -120,7 +129,7 @@ def getTransformations(requestedTransformationNames, installationDirectoryRoot):
                 transformationDataDirectory = VirtualDirectory(transformationName)
             
             sys.path.append(os.path.join(transformationsDirectoryPath, transformationName))
-            mainTransformationPythonModule = imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
+            mainTransformationPythonModule = getTransformationMainModule(transformationsDirectoryPath, transformationName)
             sys.path.remove(os.path.join(transformationsDirectoryPath, transformationName))
             transformations[transformationName] = mainTransformationPythonModule.Main(copy.copy(configurationDirectory), transformationDataDirectory, lambda d: writeTransformationDataDirectory(transformationName, d))
         else:
