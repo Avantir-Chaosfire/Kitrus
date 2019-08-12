@@ -15,6 +15,12 @@ class StringLibrary:
         self.stringSets = {}
         self.complete = False
 
+        self.cachedStrings = {}
+
+    def markAsComplete(self):
+        self.complete = True
+        self.cachedStrings = {}
+
     def size(self):
         size = 0
         for stringSet in self.stringSets.values():
@@ -82,6 +88,12 @@ class StringLibrary:
         return stringSets
 
     def getValue(self, key, kind, stringSetName = None):
+        if key in self.cachedStrings:
+            if kind in self.cachedStrings[key]:
+                return self.cachedStrings[key][kind]
+        else:
+            self.cachedStrings[key] = {}
+        
         value = None
 
         foundInSet = ''
@@ -107,6 +119,8 @@ class StringLibrary:
 
         if self.complete and kind in ['loot_tables', 'advancements'] and not value == None:
             value = self.escape(value)
+
+        self.cachedStrings[key][kind] = value
             
         return value
 
@@ -125,6 +139,9 @@ class StringLibrary:
                     foundInSet = stringSet.name
                 else:
                     self.raiseExportWarning(stringSet.name, -1, 'Duplicate string key "' + key + '" also defined in ' + foundInSet)
+
+        if key in self.cachedStrings and kind in self.cachedStrings[key]:
+            del self.cachedStrings[key][kind]
 
     def escape(self, string):
         string = string.replace('\\', '\\\\')

@@ -1,5 +1,7 @@
 import math
 
+from ExpressionTree import *
+
 class StringExpressionCalculator:
     def __init__(self, stringLibrary):
         self.BINARY_OPERATORS = {
@@ -30,66 +32,63 @@ class StringExpressionCalculator:
         }
 
         self.stringLibrary = stringLibrary
+        self.cachedExpressions = {}
 
     def formatResult(self, result):
         return '{0:g}'.format(result)
 
-    def parseStringOperator(self, path, stringSetName, operator, kind, errorFunction, lineNumber):
-        try:
-            return float(operator)
-        except ValueError:
-            value = self.stringLibrary.evaluateStringKey(operator, kind, path, stringSetName, errorFunction, lineNumber)
-            try:
-                return float(value)
-            except ValueError:
-                errorFunction(lineNumber, '"' + operator + '" does not evaluate to a number.')
-                return None
+    def getFormattedValue(self, expression, kind, path, stringSetName, errorFunction, lineNumber):
+        result = expression.getValue(kind, path, stringSetName, errorFunction, lineNumber)
+        if not result == None:
+            return self.formatResult(result)
+        errorFunction(lineNumber, 'Cannot evaluate string expression "' + key + '"')
+        return '[CANNOT EVALUATE STRING EXPRESSION]'
 
     def evaluate(self, key, kind, path, stringSetName, errorFunction, lineNumber):
+        if key in self.cachedExpressions:
+            return self.getFormattedValue(self.cachedExpressions[key], kind, path, stringSetName, errorFunction, lineNumber)
+        
         operators = key[1:].split(' ')
 
-        variableStack = []
+        expressionTreeStack = []
 
         for operator in operators:
             if operator in self.BINARY_OPERATORS:
-                if len(variableStack) < 2:
+                if len(expressionTreeStack) < 2:
                     errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
                 else:
-                    argument1String = variableStack.pop()
-                    argument2String = variableStack.pop()
+                    argument2 = expressionTreeStack.pop()
+                    argument1 = expressionTreeStack.pop()
 
-                    argument1 = self.parseStringOperator(path, stringSetName, argument1String, kind, errorFunction, lineNumber)
-                    argument2 = self.parseStringOperator(path, stringSetName, argument2String, kind, errorFunction, lineNumber)
-
-                    if None not in [argument1, argument2]:
-                        variableStack.append(self.BINARY_OPERATORS[operator](argument2, argument1))
+                    expressionTreeStack.append(BinaryExpressionOperation(self.BINARY_OPERATORS[operator], argument1, argument2))
             elif operator in self.UNARY_OPERATORS:
-                if len(variableStack) < 1:
+                if len(expressionTreeStack) < 1:
                     errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
                 else:
-                    argumentString = variableStack.pop()
-                    argument = self.parseStringOperator(path, stringSetName, argument1String, kind, errorFunction, lineNumber)
+                    argument = variableStack.pop()
 
-                    if None not in [argument]:
-                        variableStack.append(self.UNARY_OPERATORS[operator](argument))
+                    expressionTreeStack.append(UnaryExpressionOperation(self.UNARY_OPERATORS[operator], argument))
             elif operator == '=':
-                if len(variableStack) < 2:
+                if len(expressionTreeStack) < 2:
                     errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
                 else:
-                    stringValueString = variableStack.pop()
-                    stringValue = self.parseStringOperator(path, stringSetName, stringValueString, kind, errorFunction, lineNumber)
-                    stringKeyName = variableStack.pop()
-                    if not stringValue == None:
-                        self.stringLibrary.setValue(stringKeyName, kind, self.formatResult(stringValue))
-                    variableStack.append(stringValue)
+                    argument = expressionTreeStack.pop()
+                    key = expressionTreeStack.pop()
+
+                    expressionTreeStack.append(AssignmentOperation(key.name, argument, self.stringLibrary, self.formatResult))
             else:
-                variableStack.append(operator)
-        if len(variableStack) == 1:
-            stringValue = self.parseStringOperator(path, stringSetName, variableStack[0], kind, errorFunction, lineNumber)
-            if not stringValue == None:
-                return self.formatResult(stringValue)
-            else:
-                errorFunction(lineNumber, 'Unknown string key "' + variableStack[0] + '"')
+                argument = None
+                try:
+                    value = float(operator)
+                    argument = NumericalExpressionArgument(operator, value)
+                except ValueError:
+                    argument = StringKeyExpressionArgument(operator, self.stringLibrary)
+                expressionTreeStack.append(argument)
+                
+        if len(expressionTreeStack) == 1:
+            expression = expressionTreeStack[0]
+            self.cachedExpressions[key] = expression
+            return self.getFormattedValue(expression, kind, path, stringSetName, errorFunction, lineNumber)
         elif not variableStack:
             errorFunction(lineNumber, 'No expression result.')
         else:

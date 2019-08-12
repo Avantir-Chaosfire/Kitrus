@@ -35,7 +35,7 @@ class StringParser:
         while len(self.stringFilesToParse) > 0:
             self.parseStringFile(self.stringFilesToParse[0])
 
-        self.stringLibrary.complete = True
+        self.stringLibrary.markAsComplete()
 
     def getAllStringFiles(self, configurationDirectory):
         stringFiles = [file for file in configurationDirectory.fileChildren if file.name.endswith(self.STRING_FILE_EXTENSION)]
