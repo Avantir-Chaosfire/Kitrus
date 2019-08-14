@@ -24,7 +24,7 @@ class VirtualFile:
             with codecs.open(filepath, encoding = 'utf-8', mode = 'w') as file:
                 file.write(self.contents)
         else:
-            raise DuplicateFileException('A transformation duplicated a file. Unable to complete export.')
+            raise DuplicateFileException('A transformation duplicated a file named ' + self.name + '. Unable to complete export.')
 
     def getLineEndings(self):
         return VirtualFile.DOS_LINE_ENDINGS if VirtualFile.DOS_LINE_ENDINGS in self.contents else VirtualFile.UNIX_LINE_ENDINGS

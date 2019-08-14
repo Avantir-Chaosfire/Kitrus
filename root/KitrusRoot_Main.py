@@ -1,6 +1,6 @@
 #!python3
 
-import sys, os, imp, copy, ctypes
+import sys, os, imp, copy, ctypes, shutil
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_Module import *
@@ -94,6 +94,11 @@ def getConfiguration():
     return modules, procedure
 
 def writeTransformationDataDirectory(transformationName, transformationDataDirectory):
+    try:
+        shutil.rmtree(os.path.join(TRANSFORMATION_DATA_DIRECTORY, transformationName))
+    except FileNotFoundError:
+        pass
+    
     transformationDataDirectory.name = transformationName
     transformationDataDirectory.write(TRANSFORMATION_DATA_DIRECTORY)
 
