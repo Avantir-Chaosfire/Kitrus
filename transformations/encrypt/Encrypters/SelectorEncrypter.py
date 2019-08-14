@@ -1,8 +1,10 @@
-from BaseEncrypter import *
+from Encrypters.Utilities.BaseEncrypter import *
 
-def SelectorEncrypter(BaseEncrypter):
-    def __init__(self):
-        super(SelectorEncrypter, self).__init__()
+class SelectorEncrypter(BaseEncrypter):
+    def __init__(self, namespaces, encryptedTerms):
+        super(SelectorEncrypter, self).__init__(namespaces, encryptedTerms)
+
+        self.name = 'Selector Sub-Parts'
         
         self.commands = [
             'advancement',
@@ -41,29 +43,28 @@ def SelectorEncrypter(BaseEncrypter):
             'advancement (grant|revoke)',
             'bossbar set [^ ]+ players',
             '(clear|enchant|give|kill|tell|msg|w|at|spawnpoint|stopsound|tag|teleport|tp|tellraw|title)',
-            'data (get|merge|remove) entity',
+            'data (get|merge|remove|modify) entity',
             'effect (give|clear)',
             '(experience|xp) (add|set|query)',
             '(positioned|rotated)? as',
             'facing entity',
-            '(if|unless) (entity|score)',
+            '(if|unless) (data)? (entity|score)',
             '(\+=|\-=|\*=|/=|%=|=|<|>|><|<=|>=)',
             'store (result|success) (score|entity)',
             'gamemode (survival|creative|adventure|spectator)',
-            'loot replace entity',
-            'loot give',
-            'particle [^ ]+(((block|falling_dust|item) [^ ]+)|(dust ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + '))? ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['numerical'] + ' ' + super.generalRegularExpressions['numerical'] + ' (normal|force)',
+            'loot (entity|give)',
+            'particle [^ ]+(((block|falling_dust|item) [^ ]+)|(dust ' + self.generalRegularExpressions['vector'] + ' ' + self.generalRegularExpressions['vector'] + '))? ' + self.generalRegularExpressions['vector'] + ' ' + self.generalRegularExpressions['vector'] + ' ' + self.generalRegularExpressions['numerical'] + ' ' + self.generalRegularExpressions['numerical'] + ' (normal|force)',
             'playsound [^ ]+ (master|music|record|weather|block|hostile|neutral|player|ambient|voice)',
             'recipe (give|take)',
             'replaceitem entity',
             'say .*',
             'scoreboard players (list|get|set|add|remove|reset|enable|operation)',
-            'spreadplayers ' + super.generalRegularExpressions['vector'] + ' ' + super.generalRegularExpressions['numerical'] + ' (true|false)',
+            'spreadplayers ' + self.generalRegularExpressions['vector'] + ' ' + self.generalRegularExpressions['numerical'] + ' (true|false)',
             'team join [^ ]+',
             'team leave'
         ]
 
-        super.createTemplates(advanceRegularExpressions, super.generalRegularExpressions['selector'])
+        self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['selector'])
 
     def encryptTerm(self, term):
-        super.encryptSelector(term)
+        return self.encryptSelector(term)
