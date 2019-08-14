@@ -99,7 +99,6 @@ def writeTransformationDataDirectory(transformationName, transformationDataDirec
     transformationDataDirectory.write(TRANSFORMATION_DATA_DIRECTORY)
 
 def getTransformationMainModule(transformationsDirectoryPath, transformationName):
-    #return imp.load_source(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
     loader = importlib.machinery.SourceFileLoader(TRANSFORMATION_MAIN_MODULE_NAME, os.path.join(transformationsDirectoryPath, transformationName, TRANSFORMATION_MAIN_MODULE_NAME + '.py'))
     spec = importlib.util.spec_from_loader(loader.name, loader)
     module = importlib.util.module_from_spec(spec)
