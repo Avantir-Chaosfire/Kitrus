@@ -24,7 +24,6 @@ class BaseEncrypter:
         }
 
         self.encryptTextFollowingMatch = False
-
         self.usageCount = 0
 
     def createTemplates(self, advanceRegularExpressions, targetRegularExpression):
@@ -63,7 +62,6 @@ class BaseEncrypter:
     def encryptSelector(self, selector):
         if '[' in selector and ']' in selector:
             indexOfOpeningBracket = selector.index('[')
-
             (data, indexOfEndingBracket) = self.getFlatImproperJSONKeyValuePairs(selector[len('@x'):], '[', ']', '=')
             if indexOfEndingBracket == None:
                 return selector
@@ -93,7 +91,6 @@ class BaseEncrypter:
 
     def encryptProperJSON(self, properJSON):
         data = json.loads(properJSON)
-
         data = self.encryptFlatJSONText(data)
 
         if 'extra' in data:
