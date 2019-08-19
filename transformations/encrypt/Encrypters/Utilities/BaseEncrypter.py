@@ -6,21 +6,24 @@ from Encrypters.Utilities.EncryptedTerms import *
 class BaseEncrypter:
     def __init__(self, namespaces, encryptedTerms):
         self.encryptedTerms = encryptedTerms
-    
-        self.numericalRegularExpression = '[0123456789]+(\.[0123456789]+)?'
+
+        self.numericalRegularExpression = '-?[0123456789]+(\.[0123456789]+)?'
+        self.coordinateRegularExpression = '(([~^]' + self.numericalRegularExpression + ')|(' + self.numericalRegularExpression + ')|([~^]))'
         self.improperJSONObjectRegularExpression = '{([^ ]+:.+)*}'
 
         self.generalRegularExpressions = {
-            'function': '(' + '|'.join(namespaces) + '):([' + re.escape(encryptedTerms['function'].validCharacters) + ']+)',
+            'function': '(' + '|'.join(namespaces) + '):([' + re.escape(encryptedTerms['function'].validCharacters) + '/]+)',
             'tag': '([' + re.escape(encryptedTerms['tag'].validCharacters) + ']+)',
             'objective': '([' + re.escape(encryptedTerms['objective'].validCharacters) + ']+)',
-            'selector': '@[aeprs](\[(.+=.+)*\])?',
+            'selector': '@[aeprs]\[?',
             'numerical': self.numericalRegularExpression,
-            'vector': self.numericalRegularExpression + ' ' + self.numericalRegularExpression + ' ' + self.numericalRegularExpression,
+            'vector': self.coordinateRegularExpression + ' ' + self.coordinateRegularExpression + ' ' + self.coordinateRegularExpression,
             'improperJSONObject': self.improperJSONObjectRegularExpression,
             'properJSONObject': '{("[^ ]+":.+)*}',
             'item': '[^ ]+' + self.improperJSONObjectRegularExpression
         }
+
+        self.encryptTextFollowingMatch = False
 
         self.usageCount = 0
 
@@ -28,23 +31,28 @@ class BaseEncrypter:
         self.templates = []
 
         for regularExpression in advanceRegularExpressions:
-            self.templates.append(Template(regularExpression, targetRegularExpression))
+            regularExpression[-1] += ' '
+            self.templates.append(Template(regularExpression, targetRegularExpression, self))
 
     def encrypt(self, rawCommands):
         commands = rawCommands.split('\n')
         newCommands = []
 
         for command in commands:
-            if not command.startswith('#') and not command.isspace():
+            if not command.startswith('#') and not command.isspace() and len(command) > 0:
                 commandName = command.split(' ')[0]
                 if commandName in self.commands:
                     for template in self.templates:
-                        match = template.match(command)
-                        if not match == None:
+                        matches = template.match(command)
+                        matches.sort(key = lambda m: m.end, reverse = True)
+                        for match in matches:
                             commandBeforeMatch = command[:match.start]
-                            commandAfterMatch = command[match.end:]
-                            matchedTerm = command[match.start:match.end]
-                            command = commandBeforeMatch + self.encryptTerm(matchedTerm) + commandAfterMatch
+                            if self.encryptTextFollowingMatch:
+                                command = commandBeforeMatch + self.encryptTerm(command[match.start:])
+                            else:
+                                commandAfterMatch = command[match.end:]
+                                matchedTerm = command[match.start:match.end]
+                                command = commandBeforeMatch + self.encryptTerm(matchedTerm) + commandAfterMatch
                 newCommands.append(command)
 
         return '\n'.join(newCommands)
@@ -56,31 +64,40 @@ class BaseEncrypter:
         if '[' in selector and ']' in selector:
             indexOfOpeningBracket = selector.index('[')
 
-            if indexOfOpeningBracket == len('@x') and selector.endswith(']'):
-                data = self.getFlatImproperJSONKeyValuePairs(selector[2:], '[', ']', '=')
-                if 'tag' in data:
-                    data['tag'] = list(map(self.encryptSelectorTag, data['tag']))
-                if 'scores' in data:
-                    data['scores'] = list(map(self.encryptObjectivesList, data['scores']))
-                if 'nbt' in data:
-                    data['nbt'] = [self.encryptImproperJSON(nbt) for nbt in data['nbt'] if self.isImproperJSON(nbt)]
+            (data, indexOfEndingBracket) = self.getFlatImproperJSONKeyValuePairs(selector[len('@x'):], '[', ']', '=')
+            if indexOfEndingBracket == None:
+                return selector
+            
+            if 'tag' in data:
+                data['tag'] = list(map(self.encryptSelectorTag, data['tag']))
+            if 'scores' in data:
+                data['scores'] = list(map(self.encryptObjectivesList, data['scores']))
+            if 'nbt' in data:
+                data['nbt'] = [self.encryptImproperJSON(nbt) for nbt in data['nbt'] if self.isImproperJSON(nbt)]
 
-            return selector[:2] + self.encloseAsList(list(map(self.assembleRawKeyValuePairList, data.items())))
+            return selector[:indexOfOpeningBracket] + self.encloseAsList(list(map(self.assembleRawKeyValuePairList, data.items()))) + selector[indexOfEndingBracket + 1 + len('@x'):]
         return selector
 
     def encryptImproperJSON(self, improperJSON):
-        data = self.getFlatImproperJSONKeyValuePairs(improperJSON, '{', '}', ':')
-        if 'Tags' in data and data['Tags'].startswith('[') and data['Tags'].endswith(']'):
-            data['Tags'] = self.encloseAsList(list(map(self.encryptQuotedTag, data['Tags'][1:-1].split(','))))
+        (data, indexOfEndingBracket) = self.getFlatImproperJSONKeyValuePairs(improperJSON, '{', '}', ':')
+        if not indexOfEndingBracket == len(improperJSON) - 1:
+            raise Exception('Case not handled - there was text after the end of the improper JSON')
+        
+        if 'Tags' in data:
+            encryptedTags = []
+            for tags in data['Tags']:
+                if tags.startswith('[') and tags.endswith(']'):
+                    encryptedTags += map(self.encryptQuotedTag, tags[1:-1].split(','))
+            data['Tags'] = [self.encloseAsList(encryptedTags)]
         return self.encloseAsObject([key + ':' + value[0] for key, value in data.items()])
 
     def encryptProperJSON(self, properJSON):
         data = json.loads(properJSON)
 
-        data = encryptFlatJSONText(data)
+        data = self.encryptFlatJSONText(data)
 
         if 'extra' in data:
-            data['extra'] = list(map(encryptFlatJSONText, data['extra']))
+            data['extra'] = list(map(self.encryptFlatJSONText, data['extra']))
 
         return json.dumps(data)
 
@@ -88,6 +105,7 @@ class BaseEncrypter:
         startOfImproperJSON = item.index('{')
         if startOfImproperJSON > 0 and item.endswith('}'):
             item = item[:startOfImproperJSON] + self.encryptImproperJSON(item[startOfImproperJSON:])
+        return item
 
     def encryptFlatJSONText(self, flatJSONText):
         if 'selector' in flatJSONText:
@@ -104,55 +122,77 @@ class BaseEncrypter:
 
     def getFlatImproperJSONKeyValuePairs(self, sequence, openingBrace, closingBrace, assignmentOperator):
         result = {}
-        if sequence.startswith(openingBrace) and sequence.endswith(closingBrace):
-            sequence = sequence[1:-1]
+        indexOfEndingBrace = None
+        if sequence.startswith(openingBrace):
+            sequence = sequence
             state = 'key'
             key = ''
             value = ''
             escapeLevel = 0
-            currentIndex = 0
-            while currentIndex < len(sequence):
+            currentIndex = 1
+            while True:
+                if currentIndex == 1 and sequence[currentIndex] == closingBrace:
+                    indexOfEndingBrace = currentIndex
+                    break
                 if state == 'key':
-                    if sequence == assignmentOperator:
+                    if sequence[currentIndex] == assignmentOperator:
                         state = 'value'
                     else:
                         key += sequence[currentIndex]
                 elif state == 'value':
                     if sequence[currentIndex] in '{[':
                         escapeLevel += 1
-                    elif sequence[currentIndex] in '}]':
+                        value += sequence[currentIndex]
+                    elif sequence[currentIndex] in '}]' and escapeLevel > 0:
                         escapeLevel -= 1
+                        value += sequence[currentIndex]
+                    elif escapeLevel > 0:
+                        value += sequence[currentIndex]
                     elif sequence[currentIndex] == ',':
                         if key not in result:
                             result[key] = []
                         result[key].append(value)
                         state = 'key'
+                        key = ''
+                        value = ''
+                    elif sequence[currentIndex] == closingBrace:
+                        if key not in result:
+                            result[key] = []
+                        result[key].append(value)
+                        indexOfEndingBrace = currentIndex
+                        break
                     else:
                         value += sequence[currentIndex]
                 currentIndex += 1
-            if not key == '' and not value == '':
-                if key not in result:
-                    result[key] = []
-                result[key].append(value)
-        return result
+        return (result, indexOfEndingBrace)
 
     def encryptQuotedTag(self, tag):
         return '"' + self.encryptBaseTerm(tag[1:-1], 'tag') + '"' if tag.startswith('"') and tag.endswith('"') else tag
 
-    def assembleRawKeyValuePairList(self, key, values):
+    def assembleRawKeyValuePairList(self, keyValuesPair):
+        (key, values) = keyValuesPair
         return ','.join([key + '=' + value for value in values])
 
     def encryptObjectivesList(self, objectives):
-        return self.encloseAsObject(list(map(self.getFlatImproperJSONKeyValuePairs(objectives, '{', '}', '=').items(), self.assembleObjectiveKeyValuePair)))
+        (data, indexOfEndingBracket) = self.getFlatImproperJSONKeyValuePairs(objectives, '{', '}', '=')
+        if not indexOfEndingBracket == len(objectives) - 1:
+            raise Exception('Case not handled - there was text after the end of the improper JSON')
+        listOfListOfScoreComparisons = list(map(self.assembleObjectiveKeyValuePair, data.items()))
+        flatList = [item for sublist in listOfListOfScoreComparisons for item in sublist]
+        return self.encloseAsObject(flatList)
 
-    def assembleObjectiveKeyValuePair(self, key, value):
-        return self.encryptBaseTerm(key, 'objective') + '=' + value
+    def assembleObjectiveKeyValuePair(self, keyValuesPair):
+        (key, values) = keyValuesPair
+        return list(map(lambda value: self.encryptBaseTerm(key, 'objective') + '=' + value, values))
 
     def isImproperJSON(self, term):
         return not re.match(self.generalRegularExpressions['improperJSONObject'] + '$', term) == None
 
     def encryptSelectorTag(self, tag):
-        return self.encryptBaseTerm(tag[1:], 'tag') if tag.startswith('!') else self.encryptBaseTerm(tag, 'tag')
+        if tag.startswith('!'):
+            return '!' + self.encryptBaseTerm(tag[len('!'):], 'tag')
+        else:
+            return self.encryptBaseTerm(tag, 'tag')
 
     def encloseAsList(self, terms):
         return '[' + ','.join(terms) + ']'

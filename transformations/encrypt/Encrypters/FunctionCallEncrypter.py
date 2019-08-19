@@ -12,7 +12,7 @@ class FunctionCallEncrypter(BaseEncrypter):
             'schedule'
         ]
         advanceRegularExpressions = [
-            'function'
+            ['function']
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['function'])

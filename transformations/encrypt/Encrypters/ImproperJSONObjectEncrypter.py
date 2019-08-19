@@ -11,8 +11,8 @@ class ImproperJSONObjectEncrypter(BaseEncrypter):
             'summon'
         ]
         advanceRegularExpressions = [
-            'data merge entity ' + self.generalRegularExpressions['selector'],
-            'summon [^ ]+ ' + self.generalRegularExpressions['vector']
+            ['data merge entity ' + self.generalRegularExpressions['selector'], ''],
+            ['summon [^ ]+ ' + self.generalRegularExpressions['vector']]
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['improperJSONObject'])

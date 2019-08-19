@@ -12,13 +12,13 @@ class ObjectiveEncrypter(BaseEncrypter):
             'trigger'
         ]
         advanceRegularExpressions = [
-            'scoreboard objectives (add|remove|modify)',
-            'scoreboard objectives setdisplay (list|belowName|sidebar|(sidebar\.team\.[^ ]+))',
-            'scoreboard players (get|add|remove|reset|enable|operation) ' + self.generalRegularExpressions['selector'],
-            'trigger',
-            '(if|unless) score ' + self.generalRegularExpressions['selector'],
-            '(\+=|\-=|\*=|/=|%=|=|<|>|><|<=|>=)' + self.generalRegularExpressions['selector'],
-            'store (result|success) score' + self.generalRegularExpressions['selector']
+            ['scoreboard objectives (add|remove|modify)'],
+            ['scoreboard objectives setdisplay (list|belowName|sidebar|(sidebar\.team\.[^ ]+))'],
+            ['scoreboard players (get|set|add|remove|reset|enable|operation) ' + self.generalRegularExpressions['selector'], ''],
+            ['trigger'],
+            ['(if|unless) score ' + self.generalRegularExpressions['selector'], ''],
+            ['(\+=|\-=|\*=|/=|%=|=|<|>|><|<=|>=) ' + self.generalRegularExpressions['selector'], ''],
+            ['store (result|success) score ' + self.generalRegularExpressions['selector'], '']
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['objective'])

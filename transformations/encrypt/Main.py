@@ -1,7 +1,10 @@
 import string
 
 from KitrusRoot_Transformation import *
+from KitrusRoot_VirtualDirectory import *
 from NamespaceMapping import *
+from ConfigurationException import *
+from ConfigurationParsingException import *
 from Encrypters.FunctionCallEncrypter import *
 from Encrypters.ImproperJSONObjectEncrypter import *
 from Encrypters.ItemEncrypter import *
@@ -44,7 +47,7 @@ class Main(Transformation):
         self.moduleNamespaces = {}
         lineNumber = 1
         for line in lines:
-            if not line.isspace():
+            if not line.isspace() and len(line) > 0:
                 if '=' not in line:
                     raise ConfigurationParsingException('[' + self.NAMESPACE_CONFIGURATION_FILE_NAME + ':' + str(lineNumber) + '] Expected to find "=".')
                 indexOfEquals = line.index('=')
@@ -59,7 +62,7 @@ class Main(Transformation):
 
             lineNumber = 1
             for line in lines:
-                if not line.isspace():
+                if not line.isspace() and len(line) > 0:
                     if '=' not in line:
                         raise ConfigurationParsingException('[' + virtualFile.name + ':' + str(lineNumber) + '] Expected to find "=".')
                     indexOfEquals = line.index('=')
@@ -69,6 +72,14 @@ class Main(Transformation):
         self.namespaceMappings = {}
 
     def apply(self, modules):
+        self.outputMessage('WARNING: The encrypter does not use the same algorithm as regular minecraft command parsing, and doesn\'t even use a proper parser. If you are using this transformation, ERRORS WILL LIKELY OCCUR. Make sure to carefully test the results of this transformation, and update it for whatever cases you need to handle.')
+        
+        for module in modules:
+            if not module.name in self.moduleEncryptionConfiguration:
+                raise ConfigurationException('No configuration file found for ' + module.name + '.')
+            if not module.name in self.moduleNamespaces:
+                raise ConfigurationException('No namespace defined for ' + module.name + '.')
+        
         modulesToEncryptFileNames = [
             module
             for module in modules
@@ -84,15 +95,16 @@ class Main(Transformation):
 
         self.loadEncryptedTermsFromTransformationDataDirectory(encryptedTerms)
 
+        namespaces = [self.moduleNamespaces[module.name] for module in modulesToEncryptFileNames]
         for module in modules:
             fileContentEncrypters = [
-                FunctionCallEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                TagEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                ObjectiveEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                SelectorEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                ImproperJSONObjectEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                ProperJSONObjectEncrypter(self.moduleNamespaces.values(), encryptedTerms),
-                ItemEncrypter(self.moduleNamespaces.values(), encryptedTerms)
+                FunctionCallEncrypter(namespaces, encryptedTerms),
+                TagEncrypter(namespaces, encryptedTerms),
+                ObjectiveEncrypter(namespaces, encryptedTerms),
+                SelectorEncrypter(namespaces, encryptedTerms),
+                ImproperJSONObjectEncrypter(namespaces, encryptedTerms),
+                ProperJSONObjectEncrypter(namespaces, encryptedTerms),
+                #ItemEncrypter(namespaces, encryptedTerms)
             ]
 
             functionNameEncrypter = BaseEncrypter(self.moduleNamespaces.values(), encryptedTerms)
@@ -114,7 +126,7 @@ class Main(Transformation):
             name = virtualFile.name[:-len('.cfg')]
             if name in encryptedTerms:
                 for line in virtualFile.contents.split('\n'):
-                    if not line.isspace():
+                    if not line.isspace() and len(line) > 0:
                         components = line.split('=')
                         if not len(components) == 2:
                             raise Exception('Can\'t parse encryption configuration line: ' + line)

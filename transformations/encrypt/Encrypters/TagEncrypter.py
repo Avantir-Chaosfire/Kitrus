@@ -11,7 +11,7 @@ class TagEncrypter(BaseEncrypter):
             'tag'
         ]
         advanceRegularExpressions = [
-            'tag (add|remove)'
+            ['tag ' + self.generalRegularExpressions['selector'], ' (add|remove)']
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['tag'])

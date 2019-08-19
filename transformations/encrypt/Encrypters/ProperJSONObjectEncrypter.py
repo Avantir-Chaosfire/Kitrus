@@ -11,8 +11,8 @@ class ProperJSONObjectEncrypter(BaseEncrypter):
             'title'
         ]
         advanceRegularExpressions = [
-            'tellraw ' + self.generalRegularExpressions['selector'],
-            'title ' + self.generalRegularExpressions['selector'] + ' (title|subtitle|actionbar)'
+            ['tellraw ' + self.generalRegularExpressions['selector'], ''],
+            ['title ' + self.generalRegularExpressions['selector'], ' (title|subtitle|actionbar)']
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['properJSONObject'])
