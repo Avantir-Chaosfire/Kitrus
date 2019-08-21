@@ -21,6 +21,7 @@ class Main(Transformation):
         self.NAMESPACE_CONFIGURATION_FILE_NAME = 'namespaces.cfg'
         self.ENCRYPT_FILE_EXTENSION = '.cfg'
         self.ENCRYPT_FILE_NAMES_PARAMETER_NAME = 'encrypt_file_names'
+        self.LOOK_FOR_WARNINGS_PARAMETER_NAME = 'lookForWarnings'
         self.TRUE = 'true'
 
         self.transformationDataDirectory = transformationDataDirectory
@@ -72,7 +73,7 @@ class Main(Transformation):
         self.namespaceMappings = {}
 
     def apply(self, modules):
-        self.outputMessage('WARNING: The encrypter does not use the same algorithm as regular minecraft command parsing, and doesn\'t even use a proper parser. If you are using this transformation, ERRORS WILL LIKELY OCCUR. Make sure to carefully test the results of this transformation, and update it for whatever cases you need to handle.')
+        self.outputWarning('The encrypter does not use the same algorithm as regular minecraft command parsing, and doesn\'t even use a proper parser. If you are using this transformation, ERRORS WILL LIKELY OCCUR. Make sure to carefully test the results of this transformation, and update it for whatever cases you need to handle.')
         
         for module in modules:
             if not module.name in self.moduleEncryptionConfiguration:
@@ -113,10 +114,34 @@ class Main(Transformation):
         for module in modulesToEncryptFileNames:
             self.encryptFunctionNames(module.name, module.rootDirectory)
 
+        lookForWarnings = False
         for module in modules:
             self.encryptFileContents(module.name, module.rootDirectory)
             for message in self.namespaceMappings[module.name].getUsageCounts():
                 self.outputMessage(message)
+
+            lookForWarnings |= self.LOOK_FOR_WARNINGS_PARAMETER_NAME in self.moduleEncryptionConfiguration[module.name] and self.moduleEncryptionConfiguration[module.name][self.LOOK_FOR_WARNINGS_PARAMETER_NAME] == self.TRUE
+
+        if lookForWarnings:
+            for kind, terms in encryptedTerms.items():
+                unencryptedTermValues = terms.values.keys()
+                encryptedTermValues = terms.values.values()
+                commonTerms = list(set(unencryptedTermValues) & set(encryptedTermValues))
+                if len(commonTerms) > 0:
+                    self.outputWarning('Found values common to encrypted and unecrypted ' + kind + ':')
+                    for term in commonTerms:
+                        self.outputWarning('\t' + term)
+
+                for term in terms.values.keys():
+                    filesContainingTerm = []
+                    for module in modules:
+                        for virtualFile in module.rootDirectory.fileChildren:
+                            if term in virtualFile.contents: #Add constraint that characters on either side are not alphanumeric
+                                filesContainingTerm.append(virtualFile)
+                    if len(filesContainingTerm) > 0:
+                        self.outputWarning('Found "' + term + '" in:')
+                        for virtualFile in filesContainingTerm:
+                            self.outputWarning('\t' + virtualFile.name)
 
         self.writeEncryptedTermsToTransformationDataDirectory(encryptedTerms)
         self.saveData(self.transformationDataDirectory)

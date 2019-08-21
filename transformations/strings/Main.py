@@ -36,7 +36,7 @@ class Main(Transformation):
 
             warnings = self.strings.getWarnings()
             for warning in warnings:
-                self.outputWarnings(warning)
+                self.outputWarning(warning)
 
     def applyToDirectory(self, directory, kind, path):
         path = os.path.join(path, directory.name)
