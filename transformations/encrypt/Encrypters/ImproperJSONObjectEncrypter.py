@@ -1,14 +1,15 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class ImproperJSONObjectEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms):
-        super(ImproperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand):
+        super(ImproperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
 
         self.name = 'Improper JSON Sub-Parts'
         
         self.commands = [
             'data',
-            'summon'
+            'summon',
+            'execute'
         ]
         advanceRegularExpressions = [
             ['data merge entity ' + self.generalRegularExpressions['selector'], ''],

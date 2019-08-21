@@ -1,14 +1,15 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class ProperJSONObjectEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms):
-        super(ProperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand):
+        super(ProperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
 
         self.name = 'Proper JSON Sub-Parts'
         
         self.commands = [
             'tellraw',
-            'title'
+            'title',
+            'execute'
         ]
         advanceRegularExpressions = [
             ['tellraw ' + self.generalRegularExpressions['selector'], ''],

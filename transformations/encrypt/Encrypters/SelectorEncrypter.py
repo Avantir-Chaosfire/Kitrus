@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class SelectorEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms):
-        super(SelectorEncrypter, self).__init__(namespaces, encryptedTerms)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand):
+        super(SelectorEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
         self.encryptTextFollowingMatch = True
 
         self.name = 'Selector Sub-Parts'
@@ -61,7 +61,8 @@ class SelectorEncrypter(BaseEncrypter):
             ['scoreboard players (list|get|set|add|remove|reset|enable|operation)'],
             ['spreadplayers ' + self.generalRegularExpressions['vector'] + ' ' + self.generalRegularExpressions['numerical'] + ' (true|false)'],
             ['team join [^ ]+'],
-            ['team leave']
+            ['team leave'],
+            ['(tp|teleport) ' + self.generalRegularExpressions['selector'], '']
         ]
 
         self.createTemplates(advanceRegularExpressions, self.generalRegularExpressions['selector'])

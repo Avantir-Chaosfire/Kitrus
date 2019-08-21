@@ -1,4 +1,4 @@
-import string
+import string, re
 
 from KitrusRoot_Transformation import *
 from KitrusRoot_VirtualDirectory import *
@@ -98,18 +98,22 @@ class Main(Transformation):
 
         namespaces = [self.moduleNamespaces[module.name] for module in modulesToEncryptFileNames]
         for module in modules:
+            self.namespaceMappings[module.name] = NamespaceMapping(self.moduleNamespaces[module.name])
+            encryptCommand = self.namespaceMappings[module.name].encryptCommand
+
+            functionNameEncrypter = BaseEncrypter(self.moduleNamespaces.values(), encryptedTerms, encryptCommand)
             fileContentEncrypters = [
-                FunctionCallEncrypter(namespaces, encryptedTerms),
-                TagEncrypter(namespaces, encryptedTerms),
-                ObjectiveEncrypter(namespaces, encryptedTerms),
-                SelectorEncrypter(namespaces, encryptedTerms),
-                ImproperJSONObjectEncrypter(namespaces, encryptedTerms),
-                ProperJSONObjectEncrypter(namespaces, encryptedTerms),
-                #ItemEncrypter(namespaces, encryptedTerms)
+                FunctionCallEncrypter(namespaces, encryptedTerms, encryptCommand),
+                TagEncrypter(namespaces, encryptedTerms, encryptCommand),
+                ObjectiveEncrypter(namespaces, encryptedTerms, encryptCommand),
+                SelectorEncrypter(namespaces, encryptedTerms, encryptCommand),
+                ImproperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand),
+                ProperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand),
+                #ItemEncrypter(namespaces, encryptedTerms, encryptCommand)
             ]
 
-            functionNameEncrypter = BaseEncrypter(self.moduleNamespaces.values(), encryptedTerms)
-            self.namespaceMappings[module.name] = NamespaceMapping(self.moduleNamespaces[module.name], functionNameEncrypter, fileContentEncrypters)
+            self.namespaceMappings[module.name].setFunctionNameEncrypter(functionNameEncrypter)
+            self.namespaceMappings[module.name].setFileContentEncrypters(fileContentEncrypters)
 
         for module in modulesToEncryptFileNames:
             self.encryptFunctionNames(module.name, module.rootDirectory)
@@ -136,7 +140,7 @@ class Main(Transformation):
                     filesContainingTerm = []
                     for module in modules:
                         for virtualFile in module.rootDirectory.fileChildren:
-                            if term in virtualFile.contents: #Add constraint that characters on either side are not alphanumeric
+                            if not re.search('(^|[{,"! ])' + re.escape(term) + '($|[= \n\r\],"])', virtualFile.contents) == None:
                                 filesContainingTerm.append(virtualFile)
                     if len(filesContainingTerm) > 0:
                         self.outputWarning('Found "' + term + '" in:')
