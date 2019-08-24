@@ -7,6 +7,7 @@ class BaseEncrypter:
     def __init__(self, namespaces, encryptedTerms, encryptCommand):
         self.encryptedTerms = encryptedTerms
         self.encryptCommand = encryptCommand
+        self.fileEncryptedNamespaces = namespaces
 
         self.numericalRegularExpression = '-?[0123456789]+(\.[0123456789]+)?'
         self.coordinateRegularExpression = '(([~^]' + self.numericalRegularExpression + ')|(' + self.numericalRegularExpression + ')|([~^]))'

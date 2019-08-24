@@ -120,7 +120,7 @@ class Main(Transformation):
 
         lookForWarnings = False
         for module in modules:
-            self.encryptFileContents(module.name, module.rootDirectory)
+            self.encryptFileContents(module.name, module.kind, module.rootDirectory)
             for message in self.namespaceMappings[module.name].getUsageCounts():
                 self.outputMessage(message)
 
@@ -187,12 +187,12 @@ class Main(Transformation):
 
         return encryptedFiles
 
-    def encryptFileContents(self, moduleName, virtualDirectory):
+    def encryptFileContents(self, moduleName, kind, virtualDirectory):
         for virtualFile in virtualDirectory.fileChildren:
-            self.namespaceMappings[moduleName].encryptFileContents(virtualFile)
+            self.namespaceMappings[moduleName].encryptFileContents(virtualFile, kind)
 
         for virtualChildDirectory in virtualDirectory.directoryChildren:
-            self.encryptFileContents(moduleName, virtualChildDirectory)
+            self.encryptFileContents(moduleName, kind, virtualChildDirectory)
     
     def joinFunctionPath(self, path, name):
         return name if path == '' else path + '/' + name
