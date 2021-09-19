@@ -4,9 +4,10 @@ from Encrypters.Utilities.Template import *
 from Encrypters.Utilities.EncryptedTerms import *
 
 class BaseEncrypter:
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
         self.encryptedTerms = encryptedTerms
         self.encryptCommand = encryptCommand
+        self.outputMessage = outputMessage
         self.fileEncryptedNamespaces = namespaces
 
         self.numericalRegularExpression = '-?[0123456789]+(\.[0123456789]+)?'
@@ -97,7 +98,11 @@ class BaseEncrypter:
         return self.encloseAsObject([key + ':' + value[0] for key, value in data.items()])
 
     def encryptProperJSON(self, properJSON):
-        data = json.loads(properJSON)
+        try:
+            data = json.loads(properJSON)
+        except Exception as e:
+            print(properJSON)
+            raise e
         data = self.encryptFlatJSONText(data)
 
         if 'extra' in data:
@@ -214,11 +219,12 @@ class BaseEncrypter:
 
     def encryptBaseTerm(self, term, kind):
         self.usageCount += 1
-        
+
         if term not in self.encryptedTerms[kind].values:
             uniqueName = self.generateUniqueName(kind)
             while uniqueName in self.encryptedTerms[kind].values.values():
                 uniqueName = self.generateUniqueName(kind)
+            self.outputMessage('Newly added ' + kind + ': ' + term)
             self.encryptedTerms[kind].values[term] = uniqueName
         return self.encryptedTerms[kind].values[term]
 

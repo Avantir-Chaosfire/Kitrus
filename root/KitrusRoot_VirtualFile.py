@@ -9,9 +9,11 @@ class VirtualFile:
         self.name = name
         if directory == None:
             self.contents = ''
+            self.path = self.name
         else:
+            self.path = os.path.join(directory, self.name)
             try:
-                with codecs.open(os.path.join(directory, self.name), encoding = 'utf-8') as file:
+                with codecs.open(self.path, encoding = 'utf-8') as file:
                     self.contents = file.read()
             except UnicodeDecodeError as e:
                 e.reason += ', in file ' + self.name

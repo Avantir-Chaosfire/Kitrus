@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class ItemEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
-        super(ItemEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
+        super(ItemEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand, outputMessage)
 
         self.name = 'Item Sub-Parts'
         

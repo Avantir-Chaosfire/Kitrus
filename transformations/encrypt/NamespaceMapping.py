@@ -38,7 +38,10 @@ class NamespaceMapping:
         virtualFile.contents = '\n'.join(newCommands)
 
     def encryptAdvancementsFileContents(self, virtualFile):
-        data = json.loads(virtualFile.contents)
+        try:
+            data = json.loads(virtualFile.contents)
+        except json.JSONDecodeError:
+            raise Exception('Error decoding file: ' + virtualFile.name)
 
         if 'rewards' in data and 'function' in data['rewards']:
             functionCall = data['rewards']['function']

@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class ImproperJSONObjectEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
-        super(ImproperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
+        super(ImproperJSONObjectEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand, outputMessage)
 
         self.name = 'Improper JSON Sub-Parts'
         

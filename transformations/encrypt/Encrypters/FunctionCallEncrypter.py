@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class FunctionCallEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
-        super(FunctionCallEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
+        super(FunctionCallEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand, outputMessage)
 
         self.name = 'Function Calls'
         

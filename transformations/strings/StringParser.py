@@ -53,6 +53,7 @@ class StringParser:
         return stringFiles
 
     def parseStringFile(self, virtualFile):
+        self.predefinedStringLibrary.seed(virtualFile.path)
         lines = virtualFile.getContentsLines()
 
         setName = virtualFile.name
@@ -177,12 +178,11 @@ class StringParser:
 
     def replacePredefinedKeys(self, path, contents):
         matches = re.findall(self.PREDEFINED_KEY_METACHARACTER_START + '[^' + self.stringLibrary.STRING_KEY_COMMON_METACHARACTER + self.PREDEFINED_KEY_METACHARACTER_START + self.PREDEFINED_KEY_METACHARACTER_END + ']+' + self.PREDEFINED_KEY_METACHARACTER_END, contents)
-        distinctMatches = list(set(matches))
-        for match in distinctMatches:
+        for match in matches:
             key = match[len(self.PREDEFINED_KEY_METACHARACTER_START):-len(self.PREDEFINED_KEY_METACHARACTER_END)]
             value = self.predefinedStringLibrary.getValue(key, path)
             if not value == None:
-                contents = contents.replace(match, value)
+                contents = contents.replace(match, value, 1)
 
         return unescapeSymbols(contents, self.PREDEFINED_KEY_METACHARACTER_START + '(\\\\)+(' + '|'.join(self.predefinedStringLibrary.predefinitions.keys()) + ')' + self.PREDEFINED_KEY_METACHARACTER_END)
 

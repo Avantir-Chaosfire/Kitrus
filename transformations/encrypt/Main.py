@@ -96,20 +96,22 @@ class Main(Transformation):
 
         self.loadEncryptedTermsFromTransformationDataDirectory(encryptedTerms)
 
+        listOfNewlyEncryptedTermsSets = []
+
         namespaces = [self.moduleNamespaces[module.name] for module in modulesToEncryptFileNames]
         for module in modules:
             self.namespaceMappings[module.name] = NamespaceMapping(self.moduleNamespaces[module.name])
             encryptCommand = self.namespaceMappings[module.name].encryptCommand
 
-            functionNameEncrypter = BaseEncrypter(self.moduleNamespaces.values(), encryptedTerms, encryptCommand)
+            functionNameEncrypter = BaseEncrypter(self.moduleNamespaces.values(), encryptedTerms, encryptCommand, self.outputMessage)
             fileContentEncrypters = [
-                FunctionCallEncrypter(namespaces, encryptedTerms, encryptCommand),
-                TagEncrypter(namespaces, encryptedTerms, encryptCommand),
-                ObjectiveEncrypter(namespaces, encryptedTerms, encryptCommand),
-                SelectorEncrypter(namespaces, encryptedTerms, encryptCommand),
-                ImproperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand),
-                ProperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand),
-                #ItemEncrypter(namespaces, encryptedTerms, encryptCommand)
+                FunctionCallEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                TagEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                ObjectiveEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                SelectorEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                ImproperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                ProperJSONObjectEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage),
+                #ItemEncrypter(namespaces, encryptedTerms, encryptCommand, self.outputMessage)
             ]
 
             self.namespaceMappings[module.name].setFunctionNameEncrypter(functionNameEncrypter)

@@ -65,7 +65,7 @@ class StringExpressionCalculator:
                 if len(expressionTreeStack) < 1:
                     errorFunction(lineNumber, 'Not enough values to operate "' + operator + '" upon.')
                 else:
-                    argument = variableStack.pop()
+                    argument = expressionTreeStack.pop()
 
                     expressionTreeStack.append(UnaryExpressionOperation(self.UNARY_OPERATORS[operator], argument))
             elif operator == '=':

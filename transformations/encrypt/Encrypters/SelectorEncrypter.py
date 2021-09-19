@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class SelectorEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
-        super(SelectorEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
+        super(SelectorEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand, outputMessage)
         self.encryptTextFollowingMatch = True
 
         self.name = 'Selector Sub-Parts'
@@ -18,6 +18,7 @@ class SelectorEncrypter(BaseEncrypter):
             'experience',
             'gamemode',
             'give',
+            'item',
             'kill',
             'loot',
             'msg',
@@ -43,11 +44,12 @@ class SelectorEncrypter(BaseEncrypter):
         advanceRegularExpressions = [
             ['advancement (grant|revoke)'],
             ['bossbar set [^ ]+ players'],
-            ['(clear|enchant|give|kill|tell|msg|w|at|spawnpoint|stopsound|tag|teleport|tp|tellraw|title|say)'], #'give' and 'clear' also handle 'effect give' and 'effect clear' cases
+            ['(clear|enchant|give|kill|tell|msg|at|spawnpoint|stopsound|tag|teleport|tp|tellraw|title|say)'], #'give' and 'clear' also handle 'effect give' and 'effect clear' cases
             ['data (get|merge|remove|modify) entity'],
             ['(experience|xp) (add|set|query)'],
             ['(positioned|rotated)? as'],
             ['facing entity'],
+            ['item (modify|replace) entity'],
             ['(if|unless) (entity|score|data entity)'],
             ['(\+=|\-=|\*=|/=|%=|=|<|>|><|<=|>=)'],
             ['store (result|success) (score|entity)'],

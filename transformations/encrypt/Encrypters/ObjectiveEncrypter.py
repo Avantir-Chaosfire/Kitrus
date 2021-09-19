@@ -1,8 +1,8 @@
 from Encrypters.Utilities.BaseEncrypter import *
 
 class ObjectiveEncrypter(BaseEncrypter):
-    def __init__(self, namespaces, encryptedTerms, encryptCommand):
-        super(ObjectiveEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand)
+    def __init__(self, namespaces, encryptedTerms, encryptCommand, outputMessage):
+        super(ObjectiveEncrypter, self).__init__(namespaces, encryptedTerms, encryptCommand, outputMessage)
 
         self.name = 'Scoreboard Objective Names'
         
